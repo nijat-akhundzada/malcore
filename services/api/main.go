@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -50,16 +51,9 @@ func main() {
 	}))
 
 	// Routes
-	r.Post("/api/upload", http.HandlerFunc(uploadHandler.ServeHTTP))
-	r.Get("/api/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
-	})
-
-	// Serve uploaded files
-	r.Handle("/api/files/*", http.StripPrefix("/api/files/",
-		http.FileServer(http.Dir(storageDir))))
+	r.Post("/api/upload", uploadHandler.ServeHTTP)
+	r.Get("/api/health", healthHandler)
+	r.Get("/api/files/*", fileServer(storageDir))
 
 	// Start server
 	port := ":8080"
@@ -73,4 +67,15 @@ func main() {
 	if err := http.ListenAndServe(port, r); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
+}
+
+// healthHandler returns the health status
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+// fileServer serves uploaded files
+func fileServer(storageDir string) http.HandlerFunc {
+	return http.StripPrefix("/api/files/", http.FileServer(http.Dir(storageDir))).ServeHTTP
 }

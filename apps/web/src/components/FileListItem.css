@@ -1,0 +1,133 @@
+.file-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border-left: 4px solid #646cff;
+  transition: all 0.2s;
+}
+
+.file-list-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.file-list-item.uploading {
+  border-left-color: #ffa500;
+}
+
+.file-list-item.uploaded {
+  border-left-color: #4caf50;
+}
+
+.file-list-item.error {
+  border-left-color: #f44336;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-icon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-type {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.file-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input {
+  padding: 8px 36px 8px 12px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 13px;
+  width: 180px;
+  transition: border-color 0.2s;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.password-input::placeholder {
+  color: #666;
+}
+
+.password-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+}
+
+.remove-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-btn:hover {
+  background: rgba(244, 67, 54, 0.4);
+}
+
+.status-icon {
+  font-size: 18px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.error-message {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+  color: #f44336;
+  font-size: 12px;
+}

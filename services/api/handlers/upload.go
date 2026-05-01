@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"zorbox-backend/models"
+	"malcore-backend/models"
 )
 
 // UploadHandler handles file uploads
@@ -87,13 +87,14 @@ func (h *UploadHandler) handleFileUpload(r *http.Request, fileName, password str
 	defer file.Close()
 
 	// Use provided filename or original
+	fileId := time.Now().UnixNano()
 	finalName := fileName
 	if finalName == "" {
 		finalName = header.Filename
 	}
 
 	// Generate unique file ID
-	fileID := fmt.Sprintf("%d_%s", time.Now().UnixNano(), finalName)
+	fileID := fmt.Sprintf("%d_%s", fileId, finalName)
 	filePath := filepath.Join(h.StorageDir, fileID)
 
 	// Create destination file
@@ -155,6 +156,10 @@ func (h *UploadHandler) handleURLUpload(url, fileName, password string) (*models
 		// Try to get filename from Content-Disposition header
 		contentDisposition := resp.Header.Get("Content-Disposition")
 		if contentDisposition != "" {
+			fmt.Printf("im here")
+
+			fmt.Print(url)
+
 			_, params, err := mime.ParseMediaType(contentDisposition)
 			if err == nil && params["filename"] != "" {
 				finalName = params["filename"]
@@ -164,10 +169,14 @@ func (h *UploadHandler) handleURLUpload(url, fileName, password string) (*models
 		if finalName == "" {
 			finalName = filepath.Base(url)
 		}
+	} else {
+		finalName = filepath.Base(finalName)
 	}
 
 	// Generate unique file ID
-	fileID := fmt.Sprintf("%d_%s", time.Now().UnixNano(), finalName)
+	uniqueTimeBasedId := time.Now().UnixNano()
+
+	fileID := fmt.Sprintf("%d_%s", uniqueTimeBasedId, finalName)
 	filePath := filepath.Join(h.StorageDir, fileID)
 
 	// Create destination file

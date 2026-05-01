@@ -1,4 +1,4 @@
-module zorbox-backend
+module malcore-backend
 
 go 1.26.2
 

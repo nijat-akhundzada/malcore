@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"zorbox-backend/handlers"
+	"malcore-backend/handlers"
 )
 
 func main() {
@@ -57,7 +57,7 @@ func main() {
 
 	// Start server
 	port := ":8080"
-	fmt.Printf("🚀 Zorbox Backend Server starting on port %s\n", port)
+	fmt.Printf("🚀 Malcore Backend Server starting on port %s\n", port)
 	fmt.Printf("📁 Storage directory: %s\n", storageDir)
 	fmt.Println("📡 API Endpoints:")
 	fmt.Println("  POST /api/upload     - Upload files")

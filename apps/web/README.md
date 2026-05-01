@@ -1,4 +1,4 @@
-# Zorbox - File Upload Platform
+# Malcore - File Upload Platform
 
 A modern web platform for uploading and managing files from various sources.
 
@@ -45,7 +45,7 @@ The backend will run on `http://localhost:8080`
 ## Project Structure
 
 ```
-zorbox/
+malcore/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/

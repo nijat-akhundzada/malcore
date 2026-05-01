@@ -63,7 +63,7 @@ function App() {
     <div className="app">
       <div className="container">
         <header className="header">
-          <h1>📦 Zorbox</h1>
+          <h1>📦 Malcore</h1>
           <p className="subtitle">File Upload Platform</p>
         </header>
 

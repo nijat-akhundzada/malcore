@@ -1,0 +1,44 @@
+.app {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.header h1 {
+  font-size: 48px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #646cff 0%, #8b93ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: #888;
+  font-weight: 400;
+}
+
+.main-content {
+  width: 100%;
+}
+
+.progress-info {
+  text-align: center;
+  margin-top: 16px;
+  color: #888;
+  font-size: 14px;
+}

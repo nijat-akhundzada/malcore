@@ -3,18 +3,20 @@ package config
 import "os"
 
 type Config struct {
-	AppEnv   string
-	HTTPHost string
-	HTTPPort string
-	LogLevel string
+	AppEnv      string
+	HTTPHost    string
+	HTTPPort    string
+	LogLevel    string
+	DatabaseURL string
 }
 
 func Load() Config {
 	return Config{
-		AppEnv:   getEnv("APP_ENV", "development"),
-		HTTPHost: getEnv("HTTP_HOST", "0.0.0.0"),
-		HTTPPort: getEnv("HTTP_PORT", "8080"),
-		LogLevel: getEnv("LOG_LEVEL", "info"),
+		AppEnv:      getEnv("APP_ENV", "development"),
+		HTTPHost:    getEnv("HTTP_HOST", "0.0.0.0"),
+		HTTPPort:    getEnv("HTTP_PORT", "8080"),
+		LogLevel:    getEnv("LOG_LEVEL", "info"),
+		DatabaseURL: getEnv("DATABASE_URL", ""),
 	}
 }
 

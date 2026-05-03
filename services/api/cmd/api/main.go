@@ -11,6 +11,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/config"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/database"
 	httprouter "github.com/nijat-akhundzada/malcore/services/api/internal/http/router"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/logger"
 )
@@ -20,6 +21,15 @@ func main() {
 
 	cfg := config.Load()
 	log := logger.New(cfg.AppEnv)
+
+	ctx := context.Background()
+
+	db, err := database.NewPostgresPool(ctx, cfg.DatabaseURL, log)
+	if err != nil {
+		log.Error("database connection failed", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	defer db.Close()
 
 	router := httprouter.New(log)
 

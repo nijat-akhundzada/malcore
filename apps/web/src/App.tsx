@@ -63,8 +63,8 @@ function App() {
     <div className="app">
       <div className="container">
         <header className="header">
-          <h1>📦 Zorbox</h1>
-          <p className="subtitle">File Upload Platform</p>
+          <h1>🛡️ MALCORE</h1>
+          <p className="subtitle">Malware Analysis Sandbox</p>
         </header>
 
         <main className="main-content">

@@ -1,19 +1,19 @@
-# Zorbox - File Upload Platform
+# MALCORE Web
 
-A modern web platform for uploading and managing files from various sources.
+Frontend for the MALCORE malware analysis sandbox.
 
 ## Features
 
-- **File Upload**: Drag & drop or browse to upload local files
-- **URL Input**: Add files from remote URLs
-- **Password Protection**: Support for password-protected files
+- **File Upload**: Drag and drop or browse to submit local files for analysis
+- **URL Input**: Add remote file URLs for analysis workflows
+- **Password Protection**: Support for password-protected samples
 - **Modern UI**: Clean, responsive interface built with React
 - **TypeScript**: Full type safety
 
 ## Tech Stack
 
 - **Frontend**: React 18 + TypeScript + Vite
-- **Backend**: Go (to be implemented)
+- **Backend**: Go API service in `services/api`
 - **Styling**: Custom CSS
 
 ## Getting Started
@@ -21,60 +21,53 @@ A modern web platform for uploading and managing files from various sources.
 ### Prerequisites
 
 - Node.js 18+
-- Go 1.21+ (for backend)
+- Go 1.21+
 
 ### Frontend Setup
 
 ```bash
-cd frontend
+cd apps/web
 npm install
 npm run dev
 ```
 
-The frontend will run on `http://localhost:3000`
+The frontend runs on `http://localhost:5173` by default.
 
-### Backend Setup (Coming Soon)
+### Backend Setup
 
 ```bash
-cd backend
-go run main.go
+cd services/api
+go run ./cmd/api
 ```
 
-The backend will run on `http://localhost:8080`
+The backend runs on `http://localhost:8080`.
 
 ## Project Structure
 
-```
-zorbox/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── FileUploadZone.tsx
-│   │   │   ├── UrlInputForm.tsx
-│   │   │   ├── FileList.tsx
-│   │   │   ├── FileListItem.tsx
-│   │   │   └── UploadButton.tsx
-│   │   ├── hooks/
-│   │   │   └── useFileUploader.ts
-│   │   ├── services/
-│   │   │   └── api.ts
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   └── types.ts
-│   ├── package.json
-│   └── vite.config.ts
-└── backend/ (to be created)
+```text
+malcore/
+└── apps/
+    └── web/
+        ├── src/
+        │   ├── components/
+        │   ├── hooks/
+        │   ├── services/
+        │   ├── App.tsx
+        │   ├── main.tsx
+        │   └── types.ts
+        ├── index.html
+        ├── package.json
+        └── vite.config.ts
 ```
 
-## API Endpoints (Planned)
+## API Endpoints
 
-- `POST /api/upload` - Upload file or URL
-- `GET /api/upload/:id/status` - Get upload status
+- `POST /api/upload` - Upload a file or URL for analysis
+- `GET /api/upload/:id/status` - Get analysis job status
 
 ## Next Steps
 
-1. ✅ Frontend UI completed
-2. ⏳ Backend implementation with Go
-3. ⏳ File processing sandbox environments
-4. ⏳ File type validation
-5. ⏳ Download manager for URLs
+1. Improve analyst workflow and branding consistency
+2. Connect frontend flows to live API endpoints
+3. Add richer job status and report views
+4. Expand sample validation and analysis feedback

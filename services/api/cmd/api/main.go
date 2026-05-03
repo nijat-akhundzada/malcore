@@ -13,6 +13,7 @@ import (
 	"github.com/nijat-akhundzada/malcore/services/api/internal/config"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/database"
 	httprouter "github.com/nijat-akhundzada/malcore/services/api/internal/http/router"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/jobs"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/logger"
 )
 
@@ -30,8 +31,9 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
+	jobRepo := jobs.NewRepository(db)
 
-	router := httprouter.New(log)
+	router := httprouter.New(log, jobRepo)
 
 	server := &http.Server{
 		Addr:         cfg.HTTPAddr(),

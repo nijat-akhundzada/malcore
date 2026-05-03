@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: malcore-postgres
+    environment:
+      POSTGRES_USER: malcore
+      POSTGRES_PASSWORD: malcore
+      POSTGRES_DB: malcore
+    ports:
+      - "5432:5432"
+    volumes:
+      -  malcore_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U malcore -d malcore"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  malcore_postgres_data:

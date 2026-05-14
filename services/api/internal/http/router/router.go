@@ -6,8 +6,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/downloader"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/http/handlers"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/jobs"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/storage"
 )
 
 func New(log *slog.Logger, jobRepo *jobs.Repository) http.Handler {
@@ -18,12 +20,19 @@ func New(log *slog.Logger, jobRepo *jobs.Repository) http.Handler {
 	r.Use(middleware.Recoverer)
 
 	jobHandler := handlers.NewJobHandler(jobRepo)
+	dl := downloader.NewDefaultDownloader(log)
+	store := storage.NewLocalStorage("")
+	uploadHandler := handlers.NewUploadHandler(log, jobRepo, store)
+	urlHandler := handlers.NewURLHandler(log, jobRepo, dl, store)
 
 	r.Get("/health", handlers.Health)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/jobs", jobHandler.Create)
 		r.Get("/jobs/{id}", jobHandler.FindByID)
+
+		r.Post("/files/upload", uploadHandler.Upload)
+		r.Post("/urls/submit", urlHandler.Submit)
 	})
 
 	log.Info("router initialized")

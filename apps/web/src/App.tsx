@@ -17,13 +17,32 @@ function App() {
     updatePassword,
     removeFile,
     updateFileStatus,
-    clearAll,
+    retryFile,
   } = useFileUploader();
 
   const [uploadProgress, setUploadProgress] = useState({
     completed: 0,
     total: 0,
   });
+
+  const uploadSingleFile = async (file: any) => {
+    try {
+      updateFileStatus(file.id, 'uploading');
+      const response = await uploadFile(file);
+
+      if (response.job_id) {
+        updateFileStatus(file.id, 'uploaded');
+      } else {
+        updateFileStatus(file.id, 'error', response.error || 'Upload failed');
+      }
+    } catch (error) {
+      updateFileStatus(
+        file.id,
+        'error',
+        error instanceof Error ? error.message : 'Upload failed'
+      );
+    }
+  };
 
   const handleUploadAll = async () => {
     const pendingFiles = files.filter(f => f.status === 'pending');
@@ -33,23 +52,7 @@ function App() {
     setUploadProgress({ completed: 0, total: pendingFiles.length });
 
     for (const file of pendingFiles) {
-      try {
-        updateFileStatus(file.id, 'uploading');
-        const response = await uploadFile(file);
-        
-        if (response.success) {
-          updateFileStatus(file.id, 'uploaded');
-        } else {
-          updateFileStatus(file.id, 'error', response.message);
-        }
-      } catch (error) {
-        updateFileStatus(
-          file.id,
-          'error',
-          error instanceof Error ? error.message : 'Upload failed'
-        );
-      }
-      
+      await uploadSingleFile(file);
       setUploadProgress(prev => ({
         completed: prev.completed + 1,
         total: prev.total,
@@ -57,6 +60,14 @@ function App() {
     }
 
     setIsProcessing(false);
+  };
+
+  const handleRetry = async (id: string) => {
+    const file = files.find(f => f.id === id);
+    if (!file) return;
+
+    retryFile(id);
+    await uploadSingleFile({ ...file, status: 'pending', error: undefined });
   };
 
   return (
@@ -69,13 +80,14 @@ function App() {
 
         <main className="main-content">
           <FileUploadZone onFileSelect={addFile} />
-          
+
           <UrlInputForm onUrlAdd={addUrl} />
-          
+
           <FileList
             files={files}
             onPasswordChange={updatePassword}
             onRemove={removeFile}
+            onRetry={handleRetry}
           />
 
           {files.length > 0 && (
@@ -85,7 +97,7 @@ function App() {
                 disabled={files.length === 0}
                 isProcessing={isProcessing}
               />
-              
+
               {isProcessing && (
                 <div className="progress-info">
                   Uploading {uploadProgress.completed} of {uploadProgress.total} files

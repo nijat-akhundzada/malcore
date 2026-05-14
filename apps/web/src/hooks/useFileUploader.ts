@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { FileInput } from '../types';
 
 export const useFileUploader = () => {
@@ -8,12 +8,14 @@ export const useFileUploader = () => {
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const addFile = (file: File) => {
+    const isTooLarge = file.size > 10 * 1024 * 1024;
     const newFileInput: FileInput = {
       id: generateId(),
       type: 'file',
       file,
       name: file.name,
-      status: 'pending',
+      status: isTooLarge ? 'error' : 'pending',
+      error: isTooLarge ? 'File size exceeds 10MB' : undefined,
     };
     setFiles(prev => [...prev, newFileInput]);
   };
@@ -49,6 +51,14 @@ export const useFileUploader = () => {
     );
   };
 
+  const retryFile = (id: string) => {
+    setFiles(prev =>
+      prev.map(file =>
+        file.id === id ? { ...file, status: 'pending', error: undefined } : file
+      )
+    );
+  };
+
   const clearAll = () => {
     setFiles([]);
     setIsProcessing(false);
@@ -63,6 +73,7 @@ export const useFileUploader = () => {
     updatePassword,
     removeFile,
     updateFileStatus,
+    retryFile,
     clearAll,
   };
 };

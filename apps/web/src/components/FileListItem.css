@@ -116,6 +116,26 @@
   background: rgba(244, 67, 54, 0.4);
 }
 
+.retry-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(100, 108, 255, 0.2);
+  color: #646cff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.retry-btn:hover {
+  background: rgba(100, 108, 255, 0.4);
+  transform: rotate(30deg);
+}
+
 .status-icon {
   font-size: 18px;
   min-width: 24px;

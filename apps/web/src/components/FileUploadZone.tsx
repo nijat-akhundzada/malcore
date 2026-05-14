@@ -1,5 +1,4 @@
 import { FC, useRef, useState } from 'react';
-import { FileInput } from '../types';
 import './FileUploadZone.css';
 
 interface FileUploadZoneProps {
@@ -23,7 +22,7 @@ export const FileUploadZone: FC<FileUploadZoneProps> = ({ onFileSelect }) => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     const droppedFiles = Array.from(e.dataTransfer.files);
     droppedFiles.forEach(file => onFileSelect(file));
   };
@@ -62,7 +61,7 @@ export const FileUploadZone: FC<FileUploadZoneProps> = ({ onFileSelect }) => {
         </p>
         <p className="secondary-text">or click to browse</p>
       </div>
-      <p className="supported-types">Supports all file types</p>
+      <p className="supported-types">Supports all file types (Max 10MB)</p>
     </div>
   );
 };

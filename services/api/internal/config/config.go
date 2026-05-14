@@ -16,7 +16,7 @@ func Load() Config {
 		HTTPHost:    getEnv("HTTP_HOST", "0.0.0.0"),
 		HTTPPort:    getEnv("HTTP_PORT", "8080"),
 		LogLevel:    getEnv("LOG_LEVEL", "info"),
-		DatabaseURL: getEnv("DATABASE_URL", ""),
+		DatabaseURL: getEnv("DATABASE_URL", "postgres://malcore:malcore@localhost:5432/malcore?sslmode=disable"),
 	}
 }
 

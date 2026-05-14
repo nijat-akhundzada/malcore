@@ -31,6 +31,11 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
+
+	if err := database.RunMigrations(ctx, cfg.DatabaseURL, log); err != nil {
+		log.Error("database migrations failed", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
 	jobRepo := jobs.NewRepository(db)
 
 	router := httprouter.New(log, jobRepo)

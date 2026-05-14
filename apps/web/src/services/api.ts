@@ -4,25 +4,29 @@ import { FileInput, UploadResponse } from '../types';
 const API_BASE_URL = '/api';
 
 export const uploadFile = async (fileInput: FileInput): Promise<UploadResponse> => {
-  const formData = new FormData();
-  
-  if (fileInput.type === 'file' && fileInput.file) {
-    formData.append('file', fileInput.file);
-    formData.append('uploadType', 'file');
-  } else if (fileInput.type === 'url' && fileInput.url) {
-    formData.append('url', fileInput.url);
-    formData.append('uploadType', 'url');
-  }
-  
-  if (fileInput.password) {
-    formData.append('password', fileInput.password);
-  }
-  
-  formData.append('fileName', fileInput.name);
-
   try {
+    if (fileInput.type === 'url' && fileInput.url) {
+      const response = await axios.post<UploadResponse>(
+        `${API_BASE_URL}/v1/urls/submit`,
+        { url: fileInput.url }
+      );
+      return response.data;
+    }
+
+    const formData = new FormData();
+    if (fileInput.type === 'file' && fileInput.file) {
+      formData.append('file', fileInput.file);
+      formData.append('uploadType', 'file');
+    }
+
+    if (fileInput.password) {
+      formData.append('password', fileInput.password);
+    }
+
+    formData.append('fileName', fileInput.name);
+
     const response = await axios.post<UploadResponse>(
-      `${API_BASE_URL}/upload`,
+      `${API_BASE_URL}/v1/files/upload`,
       formData,
       {
         headers: {
@@ -30,11 +34,11 @@ export const uploadFile = async (fileInput: FileInput): Promise<UploadResponse> 
         },
       }
     );
-    
+
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || 'Upload failed');
+      throw new Error(error.response?.data?.error || 'Upload failed');
     }
     throw new Error('Upload failed');
   }

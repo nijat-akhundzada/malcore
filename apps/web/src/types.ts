@@ -10,7 +10,7 @@ export interface FileInput {
 }
 
 export interface UploadResponse {
-  success: boolean;
-  fileId?: string;
-  message: string;
+  job_id: string;
+  status: string;
+  error?: string;
 }

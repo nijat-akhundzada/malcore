@@ -6,12 +6,14 @@ interface FileListItemProps {
   file: FileInput;
   onPasswordChange: (id: string, password: string) => void;
   onRemove: (id: string) => void;
+  onRetry: (id: string) => void;
 }
 
 export const FileListItem: FC<FileListItemProps> = ({
   file,
   onPasswordChange,
   onRemove,
+  onRetry,
 }) => {
   const getStatusIcon = () => {
     switch (file.status) {
@@ -41,7 +43,7 @@ export const FileListItem: FC<FileListItemProps> = ({
           </span>
         </div>
       </div>
-      
+
       <div className="file-actions">
         <div className="password-input-wrapper">
           <input
@@ -53,7 +55,7 @@ export const FileListItem: FC<FileListItemProps> = ({
           />
           <span className="password-icon">🔒</span>
         </div>
-        
+
         <button
           onClick={() => onRemove(file.id)}
           className="remove-btn"
@@ -61,10 +63,20 @@ export const FileListItem: FC<FileListItemProps> = ({
         >
           ✕
         </button>
-        
+
+        {file.status === 'error' && (
+          <button
+            onClick={() => onRetry(file.id)}
+            className="retry-btn"
+            title="Retry upload"
+          >
+            🔄
+          </button>
+        )}
+
         <span className="status-icon">{getStatusIcon()}</span>
       </div>
-      
+
       {file.error && (
         <div className="error-message">{file.error}</div>
       )}

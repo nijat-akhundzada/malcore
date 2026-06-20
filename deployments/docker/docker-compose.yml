@@ -1,4 +1,68 @@
+name: malcore
+
 services:
+  api:
+    build:
+      context: ../..
+      dockerfile: services/api/Dockerfile
+    image: malcore-api:local
+    container_name: malcore-api
+    environment:
+      APP_ENV: development
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: 8080
+      DATABASE_URL: postgres://malcore:malcore@postgres:5432/malcore?sslmode=disable
+      STORAGE_BACKEND: minio
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: malcore
+      MINIO_SECRET_KEY: malcore-password
+      MINIO_BUCKET: malcore-quarantine
+      MINIO_USE_SSL: "false"
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    restart: on-failure
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: services/api/Dockerfile
+    image: malcore-api:local
+    container_name: malcore-worker
+    command: ["/app/malcore-worker"]
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgres://malcore:malcore@postgres:5432/malcore?sslmode=disable
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
+      WORKER_CONCURRENCY: 2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: on-failure
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    container_name: malcore-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
   postgres:
     image: postgres:16-alpine
     container_name: malcore-postgres
@@ -16,5 +80,38 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    container_name: malcore-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: malcore
+      MINIO_ROOT_PASSWORD: malcore-password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - malcore_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: malcore-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - malcore_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   malcore_postgres_data:
+  malcore_minio_data:
+  malcore_redis_data:

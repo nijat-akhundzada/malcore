@@ -8,22 +8,25 @@ import (
 
 	"github.com/nijat-akhundzada/malcore/services/api/internal/downloader"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/jobs"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/queue"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/storage"
 )
 
 type URLHandler struct {
 	log        *slog.Logger
-	repo       *jobs.Repository
+	repo       jobCreator
 	downloader downloader.Downloader
 	storage    storage.Storage
+	enqueuer   queue.Enqueuer
 }
 
-func NewURLHandler(log *slog.Logger, repo *jobs.Repository, dl downloader.Downloader, store storage.Storage) *URLHandler {
+func NewURLHandler(log *slog.Logger, repo jobCreator, dl downloader.Downloader, store storage.Storage, enqueuer queue.Enqueuer) *URLHandler {
 	return &URLHandler{
 		log:        log,
 		repo:       repo,
 		downloader: dl,
 		storage:    store,
+		enqueuer:   enqueuer,
 	}
 }
 
@@ -59,7 +62,6 @@ func (h *URLHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Use the robust downloader service
 	result, err := h.downloader.Download(r.Context(), req.URL)
 	if err != nil {
 		h.log.Error("download failed", slog.String("url", req.URL), slog.String("error", err.Error()))
@@ -70,11 +72,11 @@ func (h *URLHandler) Submit(w http.ResponseWriter, r *http.Request) {
 
 	h.log.Debug("url verified and metadata captured",
 		slog.String("url", req.URL),
-		slog.String("content_type", result.ContentType),
+		slog.String("final_url", result.FinalURL),
+		slog.String("reported_content_type", result.ContentType),
 		slog.Int64("content_length", result.ContentLength),
 	)
 
-	// Create job
 	job, err := h.repo.Create(r.Context(), jobs.SourceTypeURL)
 	if err != nil {
 		h.log.Error("failed to create job", slog.String("error", err.Error()))
@@ -82,21 +84,55 @@ func (h *URLHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save downloaded content to secure storage
-	storagePath, sErr := h.storage.Save(job.ID, result.Body)
+	saveResult, sErr := h.storage.Save(r.Context(), job.ID, result.FinalURL, result.Body)
 	if sErr != nil {
 		h.log.Error("failed to save download to storage", slog.String("job_id", job.ID), slog.String("error", sErr.Error()))
 		writeJSONError(w, http.StatusInternalServerError, "failed to store downloaded file")
 		return
 	}
 
+	if err := h.repo.UpdateFileMetadata(
+		r.Context(),
+		job.ID,
+		saveResult.MD5Hash,
+		saveResult.SHA256Hash,
+		saveResult.StorageKey,
+		saveResult.OriginalStorageKey,
+		saveResult.QuarantineStorageKey,
+		saveResult.MIMEType,
+		saveResult.FileExtension,
+		saveResult.MIMEExtensionMismatch,
+		saveResult.SizeBytes,
+	); err != nil {
+		h.log.Error("failed to store file metadata", slog.String("job_id", job.ID), slog.String("error", err.Error()))
+		writeJSONError(w, http.StatusInternalServerError, "failed to store file metadata")
+		return
+	}
+
+	if err := enqueueAnalysis(r.Context(), h.repo, h.enqueuer, job.ID, saveResult); err != nil {
+		h.log.Error("failed to queue analysis job", slog.String("job_id", job.ID), slog.String("error", err.Error()))
+		writeJSONError(w, http.StatusInternalServerError, "failed to queue analysis job")
+		return
+	}
+
 	h.log.Info("URL submission stored successfully",
 		slog.String("job_id", job.ID),
-		slog.String("path", storagePath),
+		slog.String("final_url", result.FinalURL),
+		slog.String("content_type", result.ContentType),
+		slog.String("path", saveResult.Path),
+		slog.String("storage_key", saveResult.StorageKey),
+		slog.String("original_storage_key", saveResult.OriginalStorageKey),
+		slog.String("quarantine_storage_key", saveResult.QuarantineStorageKey),
+		slog.String("md5_hash", saveResult.MD5Hash),
+		slog.String("sha256_hash", saveResult.SHA256Hash),
+		slog.String("mime_type", saveResult.MIMEType),
+		slog.String("file_extension", saveResult.FileExtension),
+		slog.Bool("mime_extension_mismatch", saveResult.MIMEExtensionMismatch),
+		slog.Int64("size_bytes", saveResult.SizeBytes),
 	)
 
 	writeJSON(w, http.StatusCreated, URLSubmitResponse{
 		JobID:  job.ID,
-		Status: string(job.Status),
+		Status: string(jobs.StatusQueued),
 	})
 }

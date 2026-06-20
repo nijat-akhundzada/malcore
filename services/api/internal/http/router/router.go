@@ -9,10 +9,11 @@ import (
 	"github.com/nijat-akhundzada/malcore/services/api/internal/downloader"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/http/handlers"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/jobs"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/queue"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/storage"
 )
 
-func New(log *slog.Logger, jobRepo *jobs.Repository) http.Handler {
+func New(log *slog.Logger, jobRepo *jobs.Repository, store storage.Storage, enqueuer queue.Enqueuer) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -21,9 +22,8 @@ func New(log *slog.Logger, jobRepo *jobs.Repository) http.Handler {
 
 	jobHandler := handlers.NewJobHandler(jobRepo)
 	dl := downloader.NewDefaultDownloader(log)
-	store := storage.NewLocalStorage("")
-	uploadHandler := handlers.NewUploadHandler(log, jobRepo, store)
-	urlHandler := handlers.NewURLHandler(log, jobRepo, dl, store)
+	uploadHandler := handlers.NewUploadHandler(log, jobRepo, store, enqueuer)
+	urlHandler := handlers.NewURLHandler(log, jobRepo, dl, store, enqueuer)
 
 	r.Get("/health", handlers.Health)
 

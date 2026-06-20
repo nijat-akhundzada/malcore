@@ -1,22 +1,45 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 type Config struct {
-	AppEnv      string
-	HTTPHost    string
-	HTTPPort    string
-	LogLevel    string
-	DatabaseURL string
+	AppEnv            string
+	HTTPHost          string
+	HTTPPort          string
+	LogLevel          string
+	DatabaseURL       string
+	StorageBackend    string
+	MinIOEndpoint     string
+	MinIOAccessKey    string
+	MinIOSecretKey    string
+	MinIOBucket       string
+	MinIOUseSSL       bool
+	RedisAddr         string
+	RedisPassword     string
+	RedisDB           int
+	WorkerConcurrency int
 }
 
 func Load() Config {
 	return Config{
-		AppEnv:      getEnv("APP_ENV", "development"),
-		HTTPHost:    getEnv("HTTP_HOST", "0.0.0.0"),
-		HTTPPort:    getEnv("HTTP_PORT", "8080"),
-		LogLevel:    getEnv("LOG_LEVEL", "info"),
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://malcore:malcore@localhost:5432/malcore?sslmode=disable"),
+		AppEnv:            getEnv("APP_ENV", "development"),
+		HTTPHost:          getEnv("HTTP_HOST", "0.0.0.0"),
+		HTTPPort:          getEnv("HTTP_PORT", "8080"),
+		LogLevel:          getEnv("LOG_LEVEL", "info"),
+		DatabaseURL:       getEnv("DATABASE_URL", "postgres://malcore:malcore@localhost:5432/malcore?sslmode=disable"),
+		StorageBackend:    getEnv("STORAGE_BACKEND", "minio"),
+		MinIOEndpoint:     getEnv("MINIO_ENDPOINT", "localhost:9000"),
+		MinIOAccessKey:    getEnv("MINIO_ACCESS_KEY", "malcore"),
+		MinIOSecretKey:    getEnv("MINIO_SECRET_KEY", "malcore-password"),
+		MinIOBucket:       getEnv("MINIO_BUCKET", "malcore-quarantine"),
+		MinIOUseSSL:       getEnv("MINIO_USE_SSL", "false") == "true",
+		RedisAddr:         getEnv("REDIS_ADDR", "localhost:6379"),
+		RedisPassword:     getEnv("REDIS_PASSWORD", ""),
+		RedisDB:           getEnvInt("REDIS_DB", 0),
+		WorkerConcurrency: getEnvInt("WORKER_CONCURRENCY", 2),
 	}
 }
 
@@ -31,4 +54,18 @@ func getEnv(key string, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+func getEnvInt(key string, fallback int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+
+	return parsed
 }

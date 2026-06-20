@@ -31,22 +31,19 @@ export const useFileUploader = () => {
     setFiles(prev => [...prev, newFileInput]);
   };
 
-  const updatePassword = (id: string, password: string) => {
-    setFiles(prev =>
-      prev.map(file =>
-        file.id === id ? { ...file, password } : file
-      )
-    );
-  };
-
   const removeFile = (id: string) => {
     setFiles(prev => prev.filter(file => file.id !== id));
   };
 
-  const updateFileStatus = (id: string, status: FileInput['status'], error?: string) => {
+  const updateFileStatus = (
+    id: string,
+    status: FileInput['status'],
+    error?: string,
+    jobId?: string
+  ) => {
     setFiles(prev =>
       prev.map(file =>
-        file.id === id ? { ...file, status, error } : file
+        file.id === id ? { ...file, status, error, jobId: jobId ?? file.jobId } : file
       )
     );
   };
@@ -70,7 +67,6 @@ export const useFileUploader = () => {
     setIsProcessing,
     addFile,
     addUrl,
-    updatePassword,
     removeFile,
     updateFileStatus,
     retryFile,

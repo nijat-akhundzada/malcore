@@ -4,14 +4,12 @@ import './FileListItem.css';
 
 interface FileListItemProps {
   file: FileInput;
-  onPasswordChange: (id: string, password: string) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
 }
 
 export const FileListItem: FC<FileListItemProps> = ({
   file,
-  onPasswordChange,
   onRemove,
   onRetry,
 }) => {
@@ -45,17 +43,6 @@ export const FileListItem: FC<FileListItemProps> = ({
       </div>
 
       <div className="file-actions">
-        <div className="password-input-wrapper">
-          <input
-            type="password"
-            placeholder="Password (if protected)"
-            value={file.password || ''}
-            onChange={(e) => onPasswordChange(file.id, e.target.value)}
-            className="password-input"
-          />
-          <span className="password-icon">🔒</span>
-        </div>
-
         <button
           onClick={() => onRemove(file.id)}
           className="remove-btn"
@@ -79,6 +66,10 @@ export const FileListItem: FC<FileListItemProps> = ({
 
       {file.error && (
         <div className="error-message">{file.error}</div>
+      )}
+
+      {file.jobId && (
+        <div className="job-id">Job ID: {file.jobId}</div>
       )}
     </div>
   );

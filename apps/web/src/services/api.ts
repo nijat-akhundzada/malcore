@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { FileInput, UploadResponse } from '../types';
+import { FileInput, JobStatusResponse, UploadResponse } from '../types';
 
 const API_BASE_URL = '/api';
 
@@ -13,26 +13,16 @@ export const uploadFile = async (fileInput: FileInput): Promise<UploadResponse> 
       return response.data;
     }
 
+    if (fileInput.type !== 'file' || !fileInput.file) {
+      throw new Error('File is required');
+    }
+
     const formData = new FormData();
-    if (fileInput.type === 'file' && fileInput.file) {
-      formData.append('file', fileInput.file);
-      formData.append('uploadType', 'file');
-    }
-
-    if (fileInput.password) {
-      formData.append('password', fileInput.password);
-    }
-
-    formData.append('fileName', fileInput.name);
+    formData.append('file', fileInput.file);
 
     const response = await axios.post<UploadResponse>(
       `${API_BASE_URL}/v1/files/upload`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
 
     return response.data;
@@ -44,7 +34,7 @@ export const uploadFile = async (fileInput: FileInput): Promise<UploadResponse> 
   }
 };
 
-export const getUploadStatus = async (fileId: string) => {
-  const response = await axios.get(`${API_BASE_URL}/upload/${fileId}/status`);
+export const getUploadStatus = async (jobId: string): Promise<JobStatusResponse> => {
+  const response = await axios.get<JobStatusResponse>(`${API_BASE_URL}/v1/jobs/${jobId}`);
   return response.data;
 };

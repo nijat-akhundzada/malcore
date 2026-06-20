@@ -30,12 +30,21 @@ const (
 )
 
 type AnalysisJob struct {
-	ID           string
-	SourceType   SourceType
-	Status       JobStatus
-	Score        *int
-	RiskLevel    *RiskLevel
-	ErrorMessage *string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID                    string
+	SourceType            SourceType
+	Status                JobStatus
+	MD5Hash               *string
+	SHA256Hash            *string
+	StorageKey            *string
+	OriginalStorageKey    *string
+	QuarantineStorageKey  *string
+	MIMEType              *string
+	FileExtension         *string
+	MIMEExtensionMismatch bool
+	SizeBytes             *int64
+	Score                 *int
+	RiskLevel             *RiskLevel
+	ErrorMessage          *string
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
 }

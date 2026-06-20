@@ -21,6 +21,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.npm-cache/
 
 # Node / frontend
 node_modules/
@@ -66,4 +67,3 @@ reports/
 
 # Containers / local infra
 .docker/
-

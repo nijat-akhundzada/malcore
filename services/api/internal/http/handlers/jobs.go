@@ -24,14 +24,23 @@ type CreateJobRequest struct {
 }
 
 type JobResponse struct {
-	ID           string          `json:"id"`
-	SourceType   jobs.SourceType `json:"source_type"`
-	Status       jobs.JobStatus  `json:"status"`
-	Score        *int            `json:"score"`
-	RiskLevel    *jobs.RiskLevel `json:"risk_level"`
-	ErrorMessage *string         `json:"error_message"`
-	CreatedAt    string          `json:"created_at"`
-	UpdatedAt    string          `json:"updated_at"`
+	ID                    string          `json:"id"`
+	SourceType            jobs.SourceType `json:"source_type"`
+	Status                jobs.JobStatus  `json:"status"`
+	MD5Hash               *string         `json:"md5_hash"`
+	SHA256Hash            *string         `json:"sha256_hash"`
+	StorageKey            *string         `json:"storage_key"`
+	OriginalStorageKey    *string         `json:"original_storage_key"`
+	QuarantineStorageKey  *string         `json:"quarantine_storage_key"`
+	MIMEType              *string         `json:"mime_type"`
+	FileExtension         *string         `json:"file_extension"`
+	MIMEExtensionMismatch bool            `json:"mime_extension_mismatch"`
+	SizeBytes             *int64          `json:"size_bytes"`
+	Score                 *int            `json:"score"`
+	RiskLevel             *jobs.RiskLevel `json:"risk_level"`
+	ErrorMessage          *string         `json:"error_message"`
+	CreatedAt             string          `json:"created_at"`
+	UpdatedAt             string          `json:"updated_at"`
 }
 
 func (h *JobHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -75,13 +84,22 @@ func (h *JobHandler) FindByID(w http.ResponseWriter, r *http.Request) {
 
 func toJobResponse(job *jobs.AnalysisJob) JobResponse {
 	return JobResponse{
-		ID:           job.ID,
-		SourceType:   job.SourceType,
-		Status:       job.Status,
-		Score:        job.Score,
-		RiskLevel:    job.RiskLevel,
-		ErrorMessage: job.ErrorMessage,
-		CreatedAt:    job.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-		UpdatedAt:    job.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		ID:                    job.ID,
+		SourceType:            job.SourceType,
+		Status:                job.Status,
+		MD5Hash:               job.MD5Hash,
+		SHA256Hash:            job.SHA256Hash,
+		StorageKey:            job.StorageKey,
+		OriginalStorageKey:    job.OriginalStorageKey,
+		QuarantineStorageKey:  job.QuarantineStorageKey,
+		MIMEType:              job.MIMEType,
+		FileExtension:         job.FileExtension,
+		MIMEExtensionMismatch: job.MIMEExtensionMismatch,
+		SizeBytes:             job.SizeBytes,
+		Score:                 job.Score,
+		RiskLevel:             job.RiskLevel,
+		ErrorMessage:          job.ErrorMessage,
+		CreatedAt:             job.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:             job.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}
 }

@@ -5,14 +5,12 @@ import './FileList.css';
 
 interface FileListProps {
   files: FileInput[];
-  onPasswordChange: (id: string, password: string) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
 }
 
 export const FileList: FC<FileListProps> = ({
   files,
-  onPasswordChange,
   onRemove,
   onRetry,
 }) => {
@@ -30,7 +28,6 @@ export const FileList: FC<FileListProps> = ({
           <FileListItem
             key={file.id}
             file={file}
-            onPasswordChange={onPasswordChange}
             onRemove={onRemove}
             onRetry={onRetry}
           />

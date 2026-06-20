@@ -2,6 +2,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   padding: 16px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
@@ -65,38 +67,6 @@
   gap: 12px;
 }
 
-.password-input-wrapper {
-  position: relative;
-}
-
-.password-input {
-  padding: 8px 36px 8px 12px;
-  border: 1px solid #444;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.3);
-  color: #fff;
-  font-size: 13px;
-  width: 180px;
-  transition: border-color 0.2s;
-}
-
-.password-input:focus {
-  outline: none;
-  border-color: #646cff;
-}
-
-.password-input::placeholder {
-  color: #666;
-}
-
-.password-icon {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-}
-
 .remove-btn {
   width: 32px;
   height: 32px;
@@ -150,4 +120,11 @@
   border-radius: 4px;
   color: #f44336;
   font-size: 12px;
+}
+
+.job-id {
+  width: 100%;
+  font-size: 12px;
+  color: #9ca3af;
+  overflow-wrap: anywhere;
 }

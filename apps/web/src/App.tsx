@@ -5,6 +5,7 @@ import { FileList } from './components/FileList';
 import { UploadButton } from './components/UploadButton';
 import { useFileUploader } from './hooks/useFileUploader';
 import { uploadFile } from './services/api';
+import { FileInput } from './types';
 import './App.css';
 
 function App() {
@@ -14,7 +15,6 @@ function App() {
     setIsProcessing,
     addFile,
     addUrl,
-    updatePassword,
     removeFile,
     updateFileStatus,
     retryFile,
@@ -25,13 +25,13 @@ function App() {
     total: 0,
   });
 
-  const uploadSingleFile = async (file: any) => {
+  const uploadSingleFile = async (file: FileInput) => {
     try {
       updateFileStatus(file.id, 'uploading');
       const response = await uploadFile(file);
 
       if (response.job_id) {
-        updateFileStatus(file.id, 'uploaded');
+        updateFileStatus(file.id, 'uploaded', undefined, response.job_id);
       } else {
         updateFileStatus(file.id, 'error', response.error || 'Upload failed');
       }
@@ -85,7 +85,6 @@ function App() {
 
           <FileList
             files={files}
-            onPasswordChange={updatePassword}
             onRemove={removeFile}
             onRetry={handleRetry}
           />

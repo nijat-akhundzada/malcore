@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -15,6 +17,8 @@ import (
 	httprouter "github.com/nijat-akhundzada/malcore/services/api/internal/http/router"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/jobs"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/logger"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/queue"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/storage"
 )
 
 func main() {
@@ -38,7 +42,20 @@ func main() {
 	}
 	jobRepo := jobs.NewRepository(db)
 
-	router := httprouter.New(log, jobRepo)
+	store, err := newStorage(ctx, cfg)
+	if err != nil {
+		log.Error("storage initialization failed", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	queueClient := queue.NewClient(queue.RedisOptions{
+		Addr:     cfg.RedisAddr,
+		Password: cfg.RedisPassword,
+		DB:       cfg.RedisDB,
+	})
+	defer queueClient.Close()
+
+	router := httprouter.New(log, jobRepo, store, queueClient)
 
 	server := &http.Server{
 		Addr:         cfg.HTTPAddr(),
@@ -61,6 +78,23 @@ func main() {
 	}()
 
 	waitForShutdown(log, server)
+}
+
+func newStorage(ctx context.Context, cfg config.Config) (storage.Storage, error) {
+	switch strings.ToLower(cfg.StorageBackend) {
+	case "local":
+		return storage.NewLocalStorage(""), nil
+	case "minio", "":
+		return storage.NewMinIOStorage(ctx, storage.MinIOOptions{
+			Endpoint:  cfg.MinIOEndpoint,
+			AccessKey: cfg.MinIOAccessKey,
+			SecretKey: cfg.MinIOSecretKey,
+			Bucket:    cfg.MinIOBucket,
+			UseSSL:    cfg.MinIOUseSSL,
+		})
+	default:
+		return nil, fmt.Errorf("unsupported storage backend %q", cfg.StorageBackend)
+	}
 }
 
 func waitForShutdown(log *slog.Logger, server *http.Server) {

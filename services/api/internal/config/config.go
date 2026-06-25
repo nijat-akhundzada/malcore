@@ -21,6 +21,10 @@ type Config struct {
 	RedisPassword     string
 	RedisDB           int
 	WorkerConcurrency int
+	AnalyzerCommand   string
+	AnalyzerScript    string
+	AnalyzerTimeout   int
+	AnalyzerTempDir   string
 }
 
 func Load() Config {
@@ -40,6 +44,10 @@ func Load() Config {
 		RedisPassword:     getEnv("REDIS_PASSWORD", ""),
 		RedisDB:           getEnvInt("REDIS_DB", 0),
 		WorkerConcurrency: getEnvInt("WORKER_CONCURRENCY", 2),
+		AnalyzerCommand:   getEnv("ANALYZER_COMMAND", "python3"),
+		AnalyzerScript:    getEnv("ANALYZER_SCRIPT", "/app/analyzer/analyze.py"),
+		AnalyzerTimeout:   getEnvInt("ANALYZER_TIMEOUT_SECONDS", 60),
+		AnalyzerTempDir:   getEnv("ANALYZER_TEMP_DIR", "/tmp/malcore-analyzer"),
 	}
 }
 

@@ -2,6 +2,12 @@
 
 Python static analyzer framework for MALCORE.
 
+## Setup
+
+```bash
+python3 -m pip install -r services/analyzer/requirements.txt
+```
+
 ## Usage
 
 From the repository root:
@@ -29,3 +35,5 @@ analyzers/
 ```
 
 This first version is dependency-light and does not execute samples. It performs static file inspection only.
+
+The PE analyzer uses `pefile` to extract imports, sections, and section entropy from `.exe` and `.dll` files.

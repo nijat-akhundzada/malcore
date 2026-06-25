@@ -15,20 +15,43 @@ export const FileListItem: FC<FileListItemProps> = ({
 }) => {
   const getStatusIcon = () => {
     switch (file.status) {
+      case 'completed':
+        return 'OK';
+      case 'analyzing':
+        return '...';
       case 'uploaded':
-        return '✅';
+        return 'OK';
       case 'uploading':
-        return '⏳';
+        return '...';
       case 'error':
-        return '❌';
+        return '!';
       default:
-        return '⏳';
+        return '...';
     }
   };
 
   const getTypeIcon = () => {
-    return file.type === 'file' ? '📁' : '🌐';
+    return file.type === 'file' ? 'FILE' : 'URL';
   };
+
+  const getStatusText = () => {
+    switch (file.status) {
+      case 'completed':
+        return 'Analysis complete';
+      case 'analyzing':
+        return file.job?.status ? formatJobStatus(file.job.status) : 'Queued for analysis';
+      case 'uploading':
+        return 'Uploading';
+      case 'uploaded':
+        return 'Uploaded';
+      case 'error':
+        return 'Error';
+      default:
+        return 'Ready';
+    }
+  };
+
+  const riskLevel = file.job?.risk_level?.toLowerCase() || 'pending';
 
   return (
     <div className={`file-list-item ${file.status}`}>
@@ -40,6 +63,10 @@ export const FileListItem: FC<FileListItemProps> = ({
             {file.type === 'file' ? 'Local File' : 'URL'}
           </span>
         </div>
+      </div>
+
+      <div className="file-status">
+        <span className="status-label">{getStatusText()}</span>
       </div>
 
       <div className="file-actions">
@@ -71,6 +98,62 @@ export const FileListItem: FC<FileListItemProps> = ({
       {file.jobId && (
         <div className="job-id">Job ID: {file.jobId}</div>
       )}
+
+      {file.jobId && (
+        <div className="analysis-details">
+          <div className="analysis-summary">
+            <span className={`risk-badge ${riskLevel}`}>
+              {file.job?.risk_level ? file.job.risk_level : 'pending'}
+            </span>
+            <span className="score-value">
+              Score {file.job?.score ?? 'pending'}
+              {typeof file.job?.score === 'number' ? '/100' : ''}
+            </span>
+            <span className="job-status">{file.job ? formatJobStatus(file.job.status) : 'Waiting'}</span>
+          </div>
+
+          <div className="analysis-grid">
+            <div className="analysis-field">
+              <span>MIME</span>
+              <strong>{file.job?.mime_type || 'Pending'}</strong>
+            </div>
+            <div className="analysis-field">
+              <span>Size</span>
+              <strong>{formatBytes(file.job?.size_bytes)}</strong>
+            </div>
+            <div className="analysis-field">
+              <span>MD5</span>
+              <code>{file.job?.md5_hash || 'Pending'}</code>
+            </div>
+            <div className="analysis-field">
+              <span>SHA256</span>
+              <code>{file.job?.sha256_hash || 'Pending'}</code>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+};
+
+const formatJobStatus = (status: string) =>
+  status
+    .split('_')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+const formatBytes = (value?: number | null) => {
+  if (typeof value !== 'number') {
+    return 'Pending';
+  }
+
+  if (value < 1024) {
+    return `${value} B`;
+  }
+
+  if (value < 1024 * 1024) {
+    return `${(value / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 };

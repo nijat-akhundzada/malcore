@@ -42,13 +42,24 @@ services:
     environment:
       APP_ENV: development
       DATABASE_URL: postgres://malcore:malcore@postgres:5432/malcore?sslmode=disable
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: malcore
+      MINIO_SECRET_KEY: malcore-password
+      MINIO_BUCKET: malcore-quarantine
+      MINIO_USE_SSL: "false"
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ""
       REDIS_DB: 0
       WORKER_CONCURRENCY: 2
+      ANALYZER_COMMAND: python3
+      ANALYZER_SCRIPT: /app/analyzer/analyze.py
+      ANALYZER_TIMEOUT_SECONDS: 60
+      ANALYZER_TEMP_DIR: /tmp/malcore-analyzer
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
       redis:
         condition: service_healthy
     restart: on-failure

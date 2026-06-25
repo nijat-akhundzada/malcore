@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileInput } from '../types';
+import { FileInput, JobStatusResponse } from '../types';
 
 export const useFileUploader = () => {
   const [files, setFiles] = useState<FileInput[]>([]);
@@ -48,10 +48,20 @@ export const useFileUploader = () => {
     );
   };
 
+  const updateFileJob = (id: string, job: JobStatusResponse) => {
+    setFiles(prev =>
+      prev.map(file =>
+        file.id === id ? { ...file, job, jobId: job.id || file.jobId } : file
+      )
+    );
+  };
+
   const retryFile = (id: string) => {
     setFiles(prev =>
       prev.map(file =>
-        file.id === id ? { ...file, status: 'pending', error: undefined } : file
+        file.id === id
+          ? { ...file, status: 'pending', error: undefined, jobId: undefined, job: undefined }
+          : file
       )
     );
   };
@@ -69,6 +79,7 @@ export const useFileUploader = () => {
     addUrl,
     removeFile,
     updateFileStatus,
+    updateFileJob,
     retryFile,
     clearAll,
   };

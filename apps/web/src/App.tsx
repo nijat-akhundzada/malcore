@@ -4,9 +4,14 @@ import { UrlInputForm } from './components/UrlInputForm';
 import { FileList } from './components/FileList';
 import { UploadButton } from './components/UploadButton';
 import { useFileUploader } from './hooks/useFileUploader';
-import { uploadFile } from './services/api';
+import { getUploadStatus, uploadFile } from './services/api';
 import { FileInput } from './types';
 import './App.css';
+
+const JOB_POLL_INTERVAL_MS = 1000;
+const JOB_POLL_ATTEMPTS = 60;
+
+const wait = (delay: number) => new Promise(resolve => window.setTimeout(resolve, delay));
 
 function App() {
   const {
@@ -17,6 +22,7 @@ function App() {
     addUrl,
     removeFile,
     updateFileStatus,
+    updateFileJob,
     retryFile,
   } = useFileUploader();
 
@@ -31,7 +37,8 @@ function App() {
       const response = await uploadFile(file);
 
       if (response.job_id) {
-        updateFileStatus(file.id, 'uploaded', undefined, response.job_id);
+        updateFileStatus(file.id, 'analyzing', undefined, response.job_id);
+        void pollJobStatus(file.id, response.job_id);
       } else {
         updateFileStatus(file.id, 'error', response.error || 'Upload failed');
       }
@@ -42,6 +49,39 @@ function App() {
         error instanceof Error ? error.message : 'Upload failed'
       );
     }
+  };
+
+  const pollJobStatus = async (fileId: string, jobId: string) => {
+    for (let attempt = 0; attempt < JOB_POLL_ATTEMPTS; attempt += 1) {
+      try {
+        const job = await getUploadStatus(jobId);
+        updateFileJob(fileId, job);
+
+        if (job.status === 'completed') {
+          updateFileStatus(fileId, 'completed', undefined, jobId);
+          return;
+        }
+
+        if (job.status === 'failed') {
+          updateFileStatus(fileId, 'error', job.error_message || 'Analysis failed', jobId);
+          return;
+        }
+      } catch (error) {
+        if (attempt === JOB_POLL_ATTEMPTS - 1) {
+          updateFileStatus(
+            fileId,
+            'error',
+            error instanceof Error ? error.message : 'Failed to fetch analysis result',
+            jobId
+          );
+          return;
+        }
+      }
+
+      await wait(JOB_POLL_INTERVAL_MS);
+    }
+
+    updateFileStatus(fileId, 'error', 'Analysis timed out', jobId);
   };
 
   const handleUploadAll = async () => {

@@ -4,8 +4,9 @@ export interface FileInput {
   file?: File;
   url?: string;
   name: string;
-  status: 'pending' | 'uploading' | 'uploaded' | 'error';
+  status: 'pending' | 'uploading' | 'uploaded' | 'analyzing' | 'completed' | 'error';
   jobId?: string;
+  job?: JobStatusResponse;
   error?: string;
 }
 

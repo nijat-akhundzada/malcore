@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/joho/godotenv"
@@ -51,16 +52,41 @@ func main() {
 		},
 	)
 
+	fetcher, err := worker.NewMinIOObjectFetcher(worker.MinIOObjectFetcherOptions{
+		Endpoint:  cfg.MinIOEndpoint,
+		AccessKey: cfg.MinIOAccessKey,
+		SecretKey: cfg.MinIOSecretKey,
+		Bucket:    cfg.MinIOBucket,
+		UseSSL:    cfg.MinIOUseSSL,
+		TempDir:   cfg.AnalyzerTempDir,
+	})
+	if err != nil {
+		log.Error("object fetcher initialization failed", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	analyzer, err := worker.NewPythonAnalyzer(worker.PythonAnalyzerOptions{
+		Command:    cfg.AnalyzerCommand,
+		ScriptPath: cfg.AnalyzerScript,
+		Timeout:    time.Duration(cfg.AnalyzerTimeout) * time.Second,
+		Fetcher:    fetcher,
+	})
+	if err != nil {
+		log.Error("analyzer initialization failed", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
 	mux := asynq.NewServeMux()
 	worker.NewHandler(
 		jobs.NewRepository(db),
-		worker.PlaceholderAnalyzer{},
+		analyzer,
 	).Register(mux)
 
 	go func() {
 		log.Info("starting worker",
 			slog.String("redis_addr", cfg.RedisAddr),
 			slog.Int("concurrency", cfg.WorkerConcurrency),
+			slog.String("analyzer_script", cfg.AnalyzerScript),
 		)
 
 		if err := server.Run(mux); err != nil {

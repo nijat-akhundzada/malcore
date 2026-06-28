@@ -99,6 +99,37 @@ func TestURLSubmitDownloadsFileAndCreatesJob(t *testing.T) {
 	}
 }
 
+func TestURLSubmitPassesArchivePasswordToQueue(t *testing.T) {
+	repo := &fakeJobRepo{}
+	store := &fakeStorage{}
+	enqueuer := &fakeEnqueuer{}
+	dl := &fakeDownloader{
+		result: &downloader.DownloadResult{
+			Body:          io.NopCloser(bytes.NewBufferString("url-body")),
+			ContentType:   "application/zip",
+			ContentLength: 8,
+			FinalURL:      "https://example.com/archive.zip",
+		},
+	}
+	handler := NewURLHandler(testLogger(), repo, dl, store, enqueuer)
+
+	req := jsonRequest(t, URLSubmitRequest{
+		URL:             "https://example.com/archive.zip",
+		ArchivePassword: "infected",
+	})
+	res := httptest.NewRecorder()
+
+	handler.Submit(res, req)
+
+	if res.Code != http.StatusCreated {
+		t.Fatalf("expected status %d, got %d with body %s", http.StatusCreated, res.Code, res.Body.String())
+	}
+
+	if enqueuer.payload.ArchivePassword != "infected" {
+		t.Fatalf("expected archive password in queue payload, got %q", enqueuer.payload.ArchivePassword)
+	}
+}
+
 func TestURLSubmitStoresFileEvenWhenReportedContentTypeIsUnsupported(t *testing.T) {
 	repo := &fakeJobRepo{}
 	store := &fakeStorage{}

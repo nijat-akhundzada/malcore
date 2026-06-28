@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	maxUploadFileSize = 10 << 20
-	maxUploadOverhead = 32 << 10
+	maxUploadFileSize       = 10 << 20
+	maxUploadOverhead       = 32 << 10
+	maxArchivePasswordBytes = 512
 )
 
 type jobCreator interface {
@@ -50,6 +51,12 @@ func (h *UploadHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxUploadFileSize); err != nil {
 		h.log.Error("failed to parse multipart form", slog.String("error", err.Error()))
 		writeJSONError(w, http.StatusBadRequest, "file too large or invalid multipart form")
+		return
+	}
+
+	archivePassword, err := normalizeArchivePassword(r.FormValue("archive_password"))
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -95,7 +102,7 @@ func (h *UploadHandler) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := enqueueAnalysis(r.Context(), h.repo, h.enqueuer, job.ID, saveResult); err != nil {
+	if err := enqueueAnalysis(r.Context(), h.repo, h.enqueuer, job.ID, saveResult, archivePassword); err != nil {
 		h.log.Error("failed to queue analysis job", slog.String("job_id", job.ID), slog.String("error", err.Error()))
 		writeJSONError(w, http.StatusInternalServerError, "failed to queue analysis job")
 		return
@@ -123,7 +130,7 @@ func (h *UploadHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func enqueueAnalysis(ctx context.Context, repo jobCreator, enqueuer queue.Enqueuer, jobID string, saveResult *storage.SaveResult) error {
+func enqueueAnalysis(ctx context.Context, repo jobCreator, enqueuer queue.Enqueuer, jobID string, saveResult *storage.SaveResult, archivePassword string) error {
 	if err := enqueuer.EnqueueAnalyzeFile(ctx, queue.AnalyzeFilePayload{
 		JobID:                jobID,
 		StorageKey:           saveResult.StorageKey,
@@ -131,6 +138,7 @@ func enqueueAnalysis(ctx context.Context, repo jobCreator, enqueuer queue.Enqueu
 		QuarantineStorageKey: saveResult.QuarantineStorageKey,
 		MIMEType:             saveResult.MIMEType,
 		SHA256Hash:           saveResult.SHA256Hash,
+		ArchivePassword:      archivePassword,
 	}); err != nil {
 		return err
 	}
@@ -160,6 +168,18 @@ func validatedFile(r *http.Request) (multipart.File, *multipart.FileHeader, erro
 	}
 
 	return file, header, nil
+}
+
+func normalizeArchivePassword(password string) (string, error) {
+	if len(password) > maxArchivePasswordBytes {
+		return "", errInvalidUpload("archive password too long")
+	}
+
+	if strings.Contains(password, "\x00") {
+		return "", errInvalidUpload("archive password contains invalid characters")
+	}
+
+	return password, nil
 }
 
 type errInvalidUpload string

@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,7 +20,7 @@ func (r *Repository) Create(ctx context.Context, sourceType SourceType) (*Analys
 	query := `
 		INSERT INTO analysis_jobs (source_type, status)
 		VALUES ($1, $2)
-		RETURNING id, source_type, status, md5_hash, sha256_hash, storage_key, original_storage_key, quarantine_storage_key, mime_type, file_extension, mime_extension_mismatch, size_bytes, score, risk_level, error_message, created_at, updated_at
+		RETURNING id, source_type, status, md5_hash, sha256_hash, storage_key, original_storage_key, quarantine_storage_key, mime_type, file_extension, mime_extension_mismatch, size_bytes, score, ai_score, risk_level, analyzer_result, error_message, created_at, updated_at
 	`
 
 	var job AnalysisJob
@@ -38,7 +39,9 @@ func (r *Repository) Create(ctx context.Context, sourceType SourceType) (*Analys
 		&job.MIMEExtensionMismatch,
 		&job.SizeBytes,
 		&job.Score,
+		&job.AIScore,
 		&job.RiskLevel,
+		&job.AnalyzerResult,
 		&job.ErrorMessage,
 		&job.CreatedAt,
 		&job.UpdatedAt,
@@ -52,7 +55,7 @@ func (r *Repository) Create(ctx context.Context, sourceType SourceType) (*Analys
 
 func (r *Repository) FindByID(ctx context.Context, id string) (*AnalysisJob, error) {
 	query := `
-		SELECT id, source_type, status, md5_hash, sha256_hash, storage_key, original_storage_key, quarantine_storage_key, mime_type, file_extension, mime_extension_mismatch, size_bytes, score, risk_level, error_message, created_at, updated_at
+		SELECT id, source_type, status, md5_hash, sha256_hash, storage_key, original_storage_key, quarantine_storage_key, mime_type, file_extension, mime_extension_mismatch, size_bytes, score, ai_score, risk_level, analyzer_result, error_message, created_at, updated_at
 		FROM analysis_jobs
 		WHERE id = $1
 	`
@@ -73,7 +76,9 @@ func (r *Repository) FindByID(ctx context.Context, id string) (*AnalysisJob, err
 		&job.MIMEExtensionMismatch,
 		&job.SizeBytes,
 		&job.Score,
+		&job.AIScore,
 		&job.RiskLevel,
+		&job.AnalyzerResult,
 		&job.ErrorMessage,
 		&job.CreatedAt,
 		&job.UpdatedAt,
@@ -123,18 +128,25 @@ func (r *Repository) UpdateStatus(ctx context.Context, id string, status JobStat
 	return nil
 }
 
-func (r *Repository) Complete(ctx context.Context, id string, score int, riskLevel RiskLevel) error {
+func (r *Repository) Complete(ctx context.Context, id string, score int, aiScore int, riskLevel RiskLevel, analyzerResult json.RawMessage) error {
 	query := `
 		UPDATE analysis_jobs
 		SET status = $2,
 		    score = $3,
-		    risk_level = $4,
+		    ai_score = $4,
+		    risk_level = $5,
+		    analyzer_result = $6,
 		    error_message = NULL,
 		    updated_at = now()
 		WHERE id = $1
 	`
 
-	_, err := r.db.Exec(ctx, query, id, StatusCompleted, score, riskLevel)
+	var resultValue any
+	if len(analyzerResult) > 0 {
+		resultValue = analyzerResult
+	}
+
+	_, err := r.db.Exec(ctx, query, id, StatusCompleted, score, aiScore, riskLevel, resultValue)
 	if err != nil {
 		return fmt.Errorf("complete analysis job: %w", err)
 	}

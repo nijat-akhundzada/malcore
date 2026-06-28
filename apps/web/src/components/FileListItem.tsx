@@ -1,17 +1,19 @@
 import { FC } from 'react';
-import { FileInput } from '../types';
+import { AnalyzerFinding, FileInput, IOCCollection } from '../types';
 import './FileListItem.css';
 
 interface FileListItemProps {
   file: FileInput;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
+  onArchivePasswordChange: (id: string, archivePassword: string) => void;
 }
 
 export const FileListItem: FC<FileListItemProps> = ({
   file,
   onRemove,
   onRetry,
+  onArchivePasswordChange,
 }) => {
   const getStatusIcon = () => {
     switch (file.status) {
@@ -52,6 +54,9 @@ export const FileListItem: FC<FileListItemProps> = ({
   };
 
   const riskLevel = file.job?.risk_level?.toLowerCase() || 'pending';
+  const passwordLocked = ['uploading', 'analyzing', 'completed'].includes(file.status);
+  const findings = collectFindings(file);
+  const iocs = collectIOCs(file);
 
   return (
     <div className={`file-list-item ${file.status}`}>
@@ -95,6 +100,20 @@ export const FileListItem: FC<FileListItemProps> = ({
         <div className="error-message">{file.error}</div>
       )}
 
+      {!file.jobId && (
+        <label className="archive-password-field">
+          <span>Archive password</span>
+          <input
+            type="password"
+            value={file.archivePassword || ''}
+            onChange={(event) => onArchivePasswordChange(file.id, event.target.value)}
+            disabled={passwordLocked}
+            placeholder="Optional"
+            autoComplete="off"
+          />
+        </label>
+      )}
+
       {file.jobId && (
         <div className="job-id">Job ID: {file.jobId}</div>
       )}
@@ -108,6 +127,10 @@ export const FileListItem: FC<FileListItemProps> = ({
             <span className="score-value">
               Score {file.job?.score ?? 'pending'}
               {typeof file.job?.score === 'number' ? '/100' : ''}
+            </span>
+            <span className="ai-score-value">
+              AI {file.job?.ai_score ?? 'pending'}
+              {typeof file.job?.ai_score === 'number' ? '/100' : ''}
             </span>
             <span className="job-status">{file.job ? formatJobStatus(file.job.status) : 'Waiting'}</span>
           </div>
@@ -130,10 +153,125 @@ export const FileListItem: FC<FileListItemProps> = ({
               <code>{file.job?.sha256_hash || 'Pending'}</code>
             </div>
           </div>
+
+          {iocs.length > 0 && (
+            <div className="iocs-panel">
+              <div className="iocs-title">Indicators ({iocs.length})</div>
+              <div className="iocs-list">
+                {iocs.slice(0, 12).map((ioc, index) => (
+                  <div className="ioc-item" key={`${ioc.type}-${ioc.value}-${index}`}>
+                    <span className={`ioc-type ${ioc.type}`}>{ioc.label}</span>
+                    <code>{ioc.value}</code>
+                  </div>
+                ))}
+              </div>
+              {iocs.length > 12 && (
+                <div className="iocs-more">{iocs.length - 12} more indicators</div>
+              )}
+            </div>
+          )}
+
+          {findings.length > 0 && (
+            <div className="findings-panel">
+              <div className="findings-title">Analyzer Findings ({findings.length})</div>
+              <div className="findings-list">
+                {findings.slice(0, 8).map((finding, index) => (
+                  <div className="finding-item" key={`${finding.analyzer}-${finding.type}-${index}`}>
+                    <div className="finding-heading">
+                      <span className={`finding-severity ${finding.severity.toLowerCase()}`}>
+                        {finding.severity}
+                      </span>
+                      <span className="finding-analyzer">{finding.analyzer}</span>
+                      <span className="finding-type">{finding.type}</span>
+                    </div>
+                    <div className="finding-description">{finding.description}</div>
+                  </div>
+                ))}
+              </div>
+              {findings.length > 8 && (
+                <div className="findings-more">{findings.length - 8} more findings</div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
+};
+
+interface DisplayFinding extends AnalyzerFinding {
+  analyzer: string;
+}
+
+type IOCKey = 'urls' | 'ips' | 'domains';
+
+interface DisplayIOC {
+  type: IOCKey;
+  label: string;
+  value: string;
+}
+
+const IOC_LABELS: Record<IOCKey, string> = {
+  urls: 'URL',
+  ips: 'IP',
+  domains: 'DOMAIN',
+};
+
+const collectFindings = (file: FileInput): DisplayFinding[] => {
+  const modules = file.job?.analysis_result?.results || [];
+
+  return modules.flatMap(module =>
+    (module.findings || []).map(finding => ({
+      ...finding,
+      analyzer: module.analyzer,
+    }))
+  );
+};
+
+const collectIOCs = (file: FileInput): DisplayIOC[] => {
+  const topLevel = collectIOCCollection(file.job?.analysis_result?.iocs);
+  if (topLevel.length > 0) {
+    return topLevel;
+  }
+
+  const modules = file.job?.analysis_result?.results || [];
+  const seen = new Set<string>();
+  const values: DisplayIOC[] = [];
+
+  modules.forEach(module => {
+    collectIOCCollection(module.iocs).forEach(ioc => {
+      const key = `${ioc.type}:${ioc.value}`;
+      if (seen.has(key)) {
+        return;
+      }
+
+      seen.add(key);
+      values.push(ioc);
+    });
+  });
+
+  return values;
+};
+
+const collectIOCCollection = (collection?: IOCCollection | null): DisplayIOC[] => {
+  if (!collection) {
+    return [];
+  }
+
+  return (Object.keys(IOC_LABELS) as IOCKey[]).flatMap(type => {
+    const values = collection[type];
+    if (!Array.isArray(values)) {
+      return [];
+    }
+
+    return values
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .map(value => ({
+        type,
+        label: IOC_LABELS[type],
+        value,
+      }));
+  });
 };
 
 const formatJobStatus = (status: string) =>

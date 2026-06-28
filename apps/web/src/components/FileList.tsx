@@ -7,12 +7,14 @@ interface FileListProps {
   files: FileInput[];
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
+  onArchivePasswordChange: (id: string, archivePassword: string) => void;
 }
 
 export const FileList: FC<FileListProps> = ({
   files,
   onRemove,
   onRetry,
+  onArchivePasswordChange,
 }) => {
   if (files.length === 0) {
     return null;
@@ -30,6 +32,7 @@ export const FileList: FC<FileListProps> = ({
             file={file}
             onRemove={onRemove}
             onRetry={onRetry}
+            onArchivePasswordChange={onArchivePasswordChange}
           />
         ))}
       </div>

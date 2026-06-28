@@ -1,6 +1,9 @@
 package jobs
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type JobStatus string
 
@@ -43,7 +46,9 @@ type AnalysisJob struct {
 	MIMEExtensionMismatch bool
 	SizeBytes             *int64
 	Score                 *int
+	AIScore               *int
 	RiskLevel             *RiskLevel
+	AnalyzerResult        json.RawMessage
 	ErrorMessage          *string
 	CreatedAt             time.Time
 	UpdatedAt             time.Time

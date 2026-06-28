@@ -23,6 +23,7 @@ function App() {
     removeFile,
     updateFileStatus,
     updateFileJob,
+    updateArchivePassword,
     retryFile,
   } = useFileUploader();
 
@@ -127,6 +128,7 @@ function App() {
             files={files}
             onRemove={removeFile}
             onRetry={handleRetry}
+            onArchivePasswordChange={updateArchivePassword}
           />
 
           {files.length > 0 && (

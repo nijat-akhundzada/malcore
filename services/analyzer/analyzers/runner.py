@@ -5,9 +5,12 @@ from typing import Iterable, List
 
 from .archive.analyzer import ArchiveAnalyzer
 from .core import Analyzer, FileContext
+from .iocs.analyzer import IOCAnalyzer
+from .iocs.extractor import merge_iocs
 from .office.analyzer import OfficeAnalyzer
 from .pe.analyzer import PEAnalyzer
 from .scripts.analyzer import ScriptAnalyzer
+from .yara.analyzer import YARAAnalyzer
 
 
 ANALYZERS: List[Analyzer] = [
@@ -15,6 +18,8 @@ ANALYZERS: List[Analyzer] = [
     ScriptAnalyzer(),
     OfficeAnalyzer(),
     ArchiveAnalyzer(),
+    IOCAnalyzer(),
+    YARAAnalyzer(),
 ]
 
 
@@ -22,15 +27,25 @@ def analyzer_names() -> List[str]:
     return [analyzer.name for analyzer in ANALYZERS]
 
 
-def analyze_file(path: str, selected: str = "auto") -> dict:
+def analyze_file(
+    path: str,
+    selected: str = "auto",
+    archive_password: str | None = None,
+    archive_max_depth: int = 2,
+) -> dict:
     target = Path(path)
     if not target.exists():
         raise FileNotFoundError(f"file does not exist: {path}")
     if not target.is_file():
         raise ValueError(f"path is not a file: {path}")
 
-    context = FileContext(target)
+    context = FileContext(
+        target,
+        archive_password=archive_password,
+        max_archive_depth=archive_max_depth,
+    )
     analyzers = _select_analyzers(context, selected)
+    results = [analyzer.analyze(context) for analyzer in analyzers]
 
     return {
         "schema_version": "malcore.analyzer.v1",
@@ -44,7 +59,8 @@ def analyze_file(path: str, selected: str = "auto") -> dict:
         },
         "mode": selected,
         "analyzers": [analyzer.name for analyzer in analyzers],
-        "results": [analyzer.analyze(context) for analyzer in analyzers],
+        "iocs": merge_iocs([result.get("iocs", {}) for result in results]),
+        "results": results,
     }
 
 

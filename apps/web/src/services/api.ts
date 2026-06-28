@@ -8,7 +8,10 @@ export const uploadFile = async (fileInput: FileInput): Promise<UploadResponse> 
     if (fileInput.type === 'url' && fileInput.url) {
       const response = await axios.post<UploadResponse>(
         `${API_BASE_URL}/v1/urls/submit`,
-        { url: fileInput.url }
+        {
+          url: fileInput.url,
+          archive_password: fileInput.archivePassword || undefined,
+        }
       );
       return response.data;
     }
@@ -19,6 +22,9 @@ export const uploadFile = async (fileInput: FileInput): Promise<UploadResponse> 
 
     const formData = new FormData();
     formData.append('file', fileInput.file);
+    if (fileInput.archivePassword) {
+      formData.append('archive_password', fileInput.archivePassword);
+    }
 
     const response = await axios.post<UploadResponse>(
       `${API_BASE_URL}/v1/files/upload`,

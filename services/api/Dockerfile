@@ -13,7 +13,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -o /out/malcore-worker ./cmd/worker
 
 FROM alpine:3.22
 
-RUN apk add --no-cache ca-certificates libmagic python3 py3-pefile \
+RUN apk add --no-cache ca-certificates libmagic python3 py3-pefile py3-oletools 7zip yara \
     && addgroup -S malcore \
     && adduser -S malcore -G malcore \
     && mkdir -p /app/storage \

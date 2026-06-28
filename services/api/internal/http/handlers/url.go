@@ -31,7 +31,8 @@ func NewURLHandler(log *slog.Logger, repo jobCreator, dl downloader.Downloader, 
 }
 
 type URLSubmitRequest struct {
-	URL string `json:"url"`
+	URL             string `json:"url"`
+	ArchivePassword string `json:"archive_password,omitempty"`
 }
 
 type URLSubmitResponse struct {
@@ -59,6 +60,12 @@ func (h *URLHandler) Submit(w http.ResponseWriter, r *http.Request) {
 
 	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
 		writeJSONError(w, http.StatusBadRequest, "only http and https are supported")
+		return
+	}
+
+	archivePassword, err := normalizeArchivePassword(req.ArchivePassword)
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -109,7 +116,7 @@ func (h *URLHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := enqueueAnalysis(r.Context(), h.repo, h.enqueuer, job.ID, saveResult); err != nil {
+	if err := enqueueAnalysis(r.Context(), h.repo, h.enqueuer, job.ID, saveResult, archivePassword); err != nil {
 		h.log.Error("failed to queue analysis job", slog.String("job_id", job.ID), slog.String("error", err.Error()))
 		writeJSONError(w, http.StatusInternalServerError, "failed to queue analysis job")
 		return

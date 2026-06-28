@@ -184,6 +184,28 @@ func TestUploadCreatesJob(t *testing.T) {
 	}
 }
 
+func TestUploadPassesArchivePasswordToQueue(t *testing.T) {
+	repo := &fakeJobRepo{}
+	store := &fakeStorage{}
+	enqueuer := &fakeEnqueuer{}
+	handler := NewUploadHandler(testLogger(), repo, store, enqueuer)
+
+	req := multipartUploadRequestWithFields(t, "file", "archive.zip", []byte("zip-body"), map[string]string{
+		"archive_password": "infected",
+	})
+	res := httptest.NewRecorder()
+
+	handler.Upload(res, req)
+
+	if res.Code != http.StatusCreated {
+		t.Fatalf("expected status %d, got %d with body %s", http.StatusCreated, res.Code, res.Body.String())
+	}
+
+	if enqueuer.payload.ArchivePassword != "infected" {
+		t.Fatalf("expected archive password in queue payload, got %q", enqueuer.payload.ArchivePassword)
+	}
+}
+
 func TestUploadRejectsMissingFile(t *testing.T) {
 	repo := &fakeJobRepo{}
 	store := &fakeStorage{}
@@ -255,8 +277,20 @@ func TestUploadRejectsFileLargerThanLimit(t *testing.T) {
 func multipartUploadRequest(t *testing.T, fieldName, filename string, content []byte) *http.Request {
 	t.Helper()
 
+	return multipartUploadRequestWithFields(t, fieldName, filename, content, nil)
+}
+
+func multipartUploadRequestWithFields(t *testing.T, fieldName, filename string, content []byte, fields map[string]string) *http.Request {
+	t.Helper()
+
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
+
+	for key, value := range fields {
+		if err := writer.WriteField(key, value); err != nil {
+			t.Fatalf("write form field: %v", err)
+		}
+	}
 
 	part, err := writer.CreateFormFile(fieldName, filename)
 	if err != nil {

@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nijat-akhundzada/malcore/services/api/internal/jobs"
 	"github.com/nijat-akhundzada/malcore/services/api/internal/queue"
 )
 
@@ -29,15 +28,20 @@ type PythonAnalyzer struct {
 }
 
 type analyzerOutput struct {
+	Raw     json.RawMessage
 	Results []analyzerModuleResult `json:"results"`
 }
 
 type analyzerModuleResult struct {
+	Analyzer string            `json:"analyzer"`
 	Findings []analyzerFinding `json:"findings"`
+	Metadata map[string]any    `json:"metadata"`
 }
 
 type analyzerFinding struct {
+	Type     string `json:"type"`
 	Severity string `json:"severity"`
+	Entropy  any    `json:"entropy"`
 }
 
 func NewPythonAnalyzer(options PythonAnalyzerOptions) (*PythonAnalyzer, error) {
@@ -87,7 +91,7 @@ func (a *PythonAnalyzer) Analyze(ctx context.Context, payload queue.AnalyzeFileP
 	}
 	defer cancel()
 
-	output, err := a.runCLI(analysisCtx, filePath)
+	output, err := a.runCLI(analysisCtx, filePath, payload.ArchivePassword)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +99,7 @@ func (a *PythonAnalyzer) Analyze(ctx context.Context, payload queue.AnalyzeFileP
 	return resultFromAnalyzerOutput(output), nil
 }
 
-func (a *PythonAnalyzer) runCLI(ctx context.Context, filePath string) (*analyzerOutput, error) {
+func (a *PythonAnalyzer) runCLI(ctx context.Context, filePath string, archivePassword string) (*analyzerOutput, error) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
@@ -103,6 +107,9 @@ func (a *PythonAnalyzer) runCLI(ctx context.Context, filePath string) (*analyzer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.Env = append(os.Environ(), "PYTHONUNBUFFERED=1")
+	if archivePassword != "" {
+		cmd.Env = append(cmd.Env, "MALCORE_ARCHIVE_PASSWORD="+archivePassword)
+	}
 
 	if err := cmd.Run(); err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
@@ -128,51 +135,19 @@ func (a *PythonAnalyzer) runCLI(ctx context.Context, filePath string) (*analyzer
 	if err := json.Unmarshal(stdout.Bytes(), &output); err != nil {
 		return nil, fmt.Errorf("decode python analyzer output: %w", err)
 	}
+	output.Raw = append(json.RawMessage(nil), stdout.Bytes()...)
 
 	return &output, nil
 }
 
 func resultFromAnalyzerOutput(output *analyzerOutput) *AnalysisResult {
-	score := 0
-
-	for _, module := range output.Results {
-		for _, finding := range module.Findings {
-			if findingScore := scoreForSeverity(finding.Severity); findingScore > score {
-				score = findingScore
-			}
-		}
-	}
+	score := scoreAnalyzerOutput(output)
+	aiResult := scoreAIAnalyzerOutput(output)
 
 	return &AnalysisResult{
-		Score:     score,
-		RiskLevel: riskLevelForScore(score),
-	}
-}
-
-func scoreForSeverity(severity string) int {
-	switch strings.ToLower(strings.TrimSpace(severity)) {
-	case "critical":
-		return 95
-	case "high":
-		return 80
-	case "medium":
-		return 50
-	case "low":
-		return 15
-	default:
-		return 0
-	}
-}
-
-func riskLevelForScore(score int) jobs.RiskLevel {
-	switch {
-	case score >= 90:
-		return jobs.RiskCritical
-	case score >= 70:
-		return jobs.RiskHigh
-	case score >= 40:
-		return jobs.RiskMedium
-	default:
-		return jobs.RiskLow
+		Score:          score,
+		AIScore:        aiResult.Score,
+		RiskLevel:      riskLevelForScore(score),
+		AnalyzerResult: annotateAnalyzerResult(output.Raw, score, aiResult),
 	}
 }

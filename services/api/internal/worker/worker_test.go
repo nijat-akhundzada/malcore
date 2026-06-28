@@ -16,7 +16,9 @@ type fakeRepo struct {
 	completed bool
 	failed    bool
 	score     int
+	aiScore   int
 	riskLevel jobs.RiskLevel
+	result    json.RawMessage
 	message   string
 }
 
@@ -25,10 +27,12 @@ func (r *fakeRepo) UpdateStatus(ctx context.Context, id string, status jobs.JobS
 	return nil
 }
 
-func (r *fakeRepo) Complete(ctx context.Context, id string, score int, riskLevel jobs.RiskLevel) error {
+func (r *fakeRepo) Complete(ctx context.Context, id string, score int, aiScore int, riskLevel jobs.RiskLevel, analyzerResult json.RawMessage) error {
 	r.completed = true
 	r.score = score
+	r.aiScore = aiScore
 	r.riskLevel = riskLevel
+	r.result = analyzerResult
 	return nil
 }
 
@@ -53,7 +57,7 @@ func (a fakeAnalyzer) Analyze(ctx context.Context, payload queue.AnalyzeFilePayl
 func TestHandleAnalyzeFileCompletesJob(t *testing.T) {
 	repo := &fakeRepo{}
 	handler := NewHandler(repo, fakeAnalyzer{
-		result: &AnalysisResult{Score: 12, RiskLevel: jobs.RiskLow},
+		result: &AnalysisResult{Score: 12, AIScore: 9, RiskLevel: jobs.RiskLow, AnalyzerResult: json.RawMessage(`{"results":[]}`)},
 	})
 
 	task := taskForPayload(t, queue.AnalyzeFilePayload{
@@ -71,8 +75,12 @@ func TestHandleAnalyzeFileCompletesJob(t *testing.T) {
 		t.Fatalf("expected running status, got %#v", repo.statuses)
 	}
 
-	if !repo.completed || repo.score != 12 || repo.riskLevel != jobs.RiskLow {
-		t.Fatalf("expected completed result, got completed=%v score=%d risk=%q", repo.completed, repo.score, repo.riskLevel)
+	if !repo.completed || repo.score != 12 || repo.aiScore != 9 || repo.riskLevel != jobs.RiskLow {
+		t.Fatalf("expected completed result, got completed=%v score=%d ai_score=%d risk=%q", repo.completed, repo.score, repo.aiScore, repo.riskLevel)
+	}
+
+	if string(repo.result) != `{"results":[]}` {
+		t.Fatalf("expected analyzer result to be stored, got %s", string(repo.result))
 	}
 }
 

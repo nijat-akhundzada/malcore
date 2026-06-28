@@ -27,9 +27,13 @@ class AnalyzerCLITests(unittest.TestCase):
 
         payload = json.loads(result.stdout)
         self.assertEqual(payload["schema_version"], "malcore.analyzer.v1")
-        self.assertEqual(payload["analyzers"], ["scripts"])
-        findings = payload["results"][0]["findings"]
-        self.assertTrue(any(item["type"] == "suspicious_script_pattern" for item in findings))
+        self.assertIn("scripts", payload["analyzers"])
+        self.assertIn("ioc", payload["analyzers"])
+        self.assertIn("http://example.com/a", payload["iocs"]["urls"])
+
+        script_result = next(item for item in payload["results"] if item["analyzer"] == "scripts")
+        findings = script_result["findings"]
+        self.assertTrue(any(item["type"] == "script_dynamic_execution" for item in findings))
 
     def test_archive_path_traversal_finding(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -37,7 +37,9 @@ type JobResponse struct {
 	MIMEExtensionMismatch bool            `json:"mime_extension_mismatch"`
 	SizeBytes             *int64          `json:"size_bytes"`
 	Score                 *int            `json:"score"`
+	AIScore               *int            `json:"ai_score"`
 	RiskLevel             *jobs.RiskLevel `json:"risk_level"`
+	AnalyzerResult        json.RawMessage `json:"analysis_result,omitempty"`
 	ErrorMessage          *string         `json:"error_message"`
 	CreatedAt             string          `json:"created_at"`
 	UpdatedAt             string          `json:"updated_at"`
@@ -97,7 +99,9 @@ func toJobResponse(job *jobs.AnalysisJob) JobResponse {
 		MIMEExtensionMismatch: job.MIMEExtensionMismatch,
 		SizeBytes:             job.SizeBytes,
 		Score:                 job.Score,
+		AIScore:               job.AIScore,
 		RiskLevel:             job.RiskLevel,
+		AnalyzerResult:        job.AnalyzerResult,
 		ErrorMessage:          job.ErrorMessage,
 		CreatedAt:             job.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:             job.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),

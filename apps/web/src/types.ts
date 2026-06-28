@@ -5,6 +5,7 @@ export interface FileInput {
   url?: string;
   name: string;
   status: 'pending' | 'uploading' | 'uploaded' | 'analyzing' | 'completed' | 'error';
+  archivePassword?: string;
   jobId?: string;
   job?: JobStatusResponse;
   error?: string;
@@ -14,6 +15,37 @@ export interface UploadResponse {
   job_id: string;
   status: string;
   error?: string;
+}
+
+export interface AnalyzerFinding {
+  type: string;
+  severity: string;
+  description: string;
+  [key: string]: unknown;
+}
+
+export interface IOCCollection {
+  urls?: string[];
+  ips?: string[];
+  domains?: string[];
+  [key: string]: unknown;
+}
+
+export interface AnalyzerModuleResult {
+  analyzer: string;
+  category?: string;
+  supported?: boolean;
+  findings?: AnalyzerFinding[];
+  iocs?: IOCCollection;
+  errors?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface AnalyzerResult {
+  schema_version?: string;
+  analyzers?: string[];
+  iocs?: IOCCollection;
+  results?: AnalyzerModuleResult[];
 }
 
 export interface JobStatusResponse {
@@ -30,7 +62,9 @@ export interface JobStatusResponse {
   mime_extension_mismatch: boolean;
   size_bytes?: number | null;
   score?: number | null;
+  ai_score?: number | null;
   risk_level?: string | null;
+  analysis_result?: AnalyzerResult | null;
   error_message?: string | null;
   created_at: string;
   updated_at: string;

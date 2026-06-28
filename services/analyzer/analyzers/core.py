@@ -24,13 +24,23 @@ class Analyzer(ABC):
 
 
 class FileContext:
-    def __init__(self, path: Path, sample_size: int = 4096) -> None:
+    def __init__(
+        self,
+        path: Path,
+        sample_size: int = 4096,
+        archive_password: str | None = None,
+        archive_depth: int = 0,
+        max_archive_depth: int = 2,
+    ) -> None:
         self.path = path
         self.name = path.name
         self.extension = path.suffix.lower()
         self.size = path.stat().st_size
         self.sample = path.read_bytes()[:sample_size]
         self.mime_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        self.archive_password = archive_password
+        self.archive_depth = archive_depth
+        self.max_archive_depth = max_archive_depth
 
     @property
     def is_text_like(self) -> bool:
@@ -64,7 +74,7 @@ def base_result(analyzer: Analyzer, context: FileContext, supported: bool = True
         },
         "metadata": {},
         "findings": [],
-        "iocs": [],
+        "iocs": {"urls": [], "ips": [], "domains": []},
         "errors": [],
     }
 

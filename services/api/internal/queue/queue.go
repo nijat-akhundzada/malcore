@@ -21,6 +21,7 @@ type AnalyzeFilePayload struct {
 	QuarantineStorageKey string `json:"quarantine_storage_key"`
 	MIMEType             string `json:"mime_type"`
 	SHA256Hash           string `json:"sha256_hash"`
+	ArchivePassword      string `json:"archive_password,omitempty"`
 }
 
 type Enqueuer interface {

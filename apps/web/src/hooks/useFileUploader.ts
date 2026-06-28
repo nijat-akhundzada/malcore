@@ -20,12 +20,13 @@ export const useFileUploader = () => {
     setFiles(prev => [...prev, newFileInput]);
   };
 
-  const addUrl = (url: string, name?: string) => {
+  const addUrl = (url: string, archivePassword?: string, name?: string) => {
     const newFileInput: FileInput = {
       id: generateId(),
       type: 'url',
       url,
       name: name || url,
+      archivePassword,
       status: 'pending',
     };
     setFiles(prev => [...prev, newFileInput]);
@@ -56,6 +57,14 @@ export const useFileUploader = () => {
     );
   };
 
+  const updateArchivePassword = (id: string, archivePassword: string) => {
+    setFiles(prev =>
+      prev.map(file =>
+        file.id === id ? { ...file, archivePassword } : file
+      )
+    );
+  };
+
   const retryFile = (id: string) => {
     setFiles(prev =>
       prev.map(file =>
@@ -80,6 +89,7 @@ export const useFileUploader = () => {
     removeFile,
     updateFileStatus,
     updateFileJob,
+    updateArchivePassword,
     retryFile,
     clearAll,
   };

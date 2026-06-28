@@ -12,13 +12,15 @@ import (
 
 type JobRepository interface {
 	UpdateStatus(ctx context.Context, id string, status jobs.JobStatus) error
-	Complete(ctx context.Context, id string, score int, riskLevel jobs.RiskLevel) error
+	Complete(ctx context.Context, id string, score int, aiScore int, riskLevel jobs.RiskLevel, analyzerResult json.RawMessage) error
 	Fail(ctx context.Context, id string, message string) error
 }
 
 type AnalysisResult struct {
-	Score     int
-	RiskLevel jobs.RiskLevel
+	Score          int
+	AIScore        int
+	RiskLevel      jobs.RiskLevel
+	AnalyzerResult json.RawMessage
 }
 
 type Analyzer interface {
@@ -33,8 +35,10 @@ func (a PlaceholderAnalyzer) Analyze(ctx context.Context, payload queue.AnalyzeF
 	}
 
 	return &AnalysisResult{
-		Score:     0,
-		RiskLevel: jobs.RiskLow,
+		Score:          0,
+		AIScore:        0,
+		RiskLevel:      jobs.RiskLow,
+		AnalyzerResult: json.RawMessage(`{"results":[]}`),
 	}, nil
 }
 
@@ -74,7 +78,7 @@ func (h *Handler) HandleAnalyzeFile(ctx context.Context, task *asynq.Task) error
 		return err
 	}
 
-	if err := h.repo.Complete(ctx, payload.JobID, result.Score, result.RiskLevel); err != nil {
+	if err := h.repo.Complete(ctx, payload.JobID, result.Score, result.AIScore, result.RiskLevel, result.AnalyzerResult); err != nil {
 		return err
 	}
 

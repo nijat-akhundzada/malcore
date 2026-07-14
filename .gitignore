@@ -63,7 +63,7 @@ uploads/
 quarantine/
 samples/
 artifacts/
-reports/
+/reports/
 
 # Containers / local infra
 .docker/

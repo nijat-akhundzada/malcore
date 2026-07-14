@@ -209,15 +209,20 @@ func scoreForSeverity(severity string) int {
 
 func riskLevelForScore(score int) jobs.RiskLevel {
 	switch {
-	case score >= 90:
+	case score >= 80:
 		return jobs.RiskCritical
-	case score >= 70:
+	case score >= 60:
 		return jobs.RiskHigh
-	case score >= 40:
+	case score >= 30:
 		return jobs.RiskMedium
 	default:
 		return jobs.RiskLow
 	}
+}
+
+func finalScore(ruleScore int, aiScore int) int {
+	weighted := (0.6 * float64(clampScore(ruleScore))) + (0.4 * float64(clampScore(aiScore)))
+	return clampScore(int(math.Round(weighted)))
 }
 
 func floatValue(value any) (float64, bool) {

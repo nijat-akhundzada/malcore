@@ -1,5 +1,6 @@
 import { FC } from 'react';
-import { AnalyzerFinding, FileInput, IOCCollection } from '../types';
+import { FileInput } from '../types';
+import { collectFindings, collectIOCs, formatBytes, formatJobStatus } from '../utils/analysis';
 import './FileListItem.css';
 
 interface FileListItemProps {
@@ -7,6 +8,8 @@ interface FileListItemProps {
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
   onArchivePasswordChange: (id: string, archivePassword: string) => void;
+  onOpenStatus: (jobId: string) => void;
+  onOpenResult: (jobId: string) => void;
 }
 
 export const FileListItem: FC<FileListItemProps> = ({
@@ -14,6 +17,8 @@ export const FileListItem: FC<FileListItemProps> = ({
   onRemove,
   onRetry,
   onArchivePasswordChange,
+  onOpenStatus,
+  onOpenResult,
 }) => {
   const getStatusIcon = () => {
     switch (file.status) {
@@ -55,8 +60,9 @@ export const FileListItem: FC<FileListItemProps> = ({
 
   const riskLevel = file.job?.risk_level?.toLowerCase() || 'pending';
   const passwordLocked = ['uploading', 'analyzing', 'completed'].includes(file.status);
-  const findings = collectFindings(file);
-  const iocs = collectIOCs(file);
+  const findings = collectFindings(file.job);
+  const iocs = collectIOCs(file.job);
+  const jobId = file.jobId;
 
   return (
     <div className={`file-list-item ${file.status}`}>
@@ -116,6 +122,21 @@ export const FileListItem: FC<FileListItemProps> = ({
 
       {file.jobId && (
         <div className="job-id">Job ID: {file.jobId}</div>
+      )}
+
+      {file.jobId && (
+        <div className="session-actions">
+          <button onClick={() => jobId && onOpenStatus(jobId)} className="ghost-action">
+            Status
+          </button>
+          <button
+            onClick={() => jobId && onOpenResult(jobId)}
+            className="ghost-action"
+            disabled={file.job?.status !== 'completed'}
+          >
+            Results
+          </button>
+        </div>
       )}
 
       {file.jobId && (
@@ -197,101 +218,4 @@ export const FileListItem: FC<FileListItemProps> = ({
       )}
     </div>
   );
-};
-
-interface DisplayFinding extends AnalyzerFinding {
-  analyzer: string;
-}
-
-type IOCKey = 'urls' | 'ips' | 'domains';
-
-interface DisplayIOC {
-  type: IOCKey;
-  label: string;
-  value: string;
-}
-
-const IOC_LABELS: Record<IOCKey, string> = {
-  urls: 'URL',
-  ips: 'IP',
-  domains: 'DOMAIN',
-};
-
-const collectFindings = (file: FileInput): DisplayFinding[] => {
-  const modules = file.job?.analysis_result?.results || [];
-
-  return modules.flatMap(module =>
-    (module.findings || []).map(finding => ({
-      ...finding,
-      analyzer: module.analyzer,
-    }))
-  );
-};
-
-const collectIOCs = (file: FileInput): DisplayIOC[] => {
-  const topLevel = collectIOCCollection(file.job?.analysis_result?.iocs);
-  if (topLevel.length > 0) {
-    return topLevel;
-  }
-
-  const modules = file.job?.analysis_result?.results || [];
-  const seen = new Set<string>();
-  const values: DisplayIOC[] = [];
-
-  modules.forEach(module => {
-    collectIOCCollection(module.iocs).forEach(ioc => {
-      const key = `${ioc.type}:${ioc.value}`;
-      if (seen.has(key)) {
-        return;
-      }
-
-      seen.add(key);
-      values.push(ioc);
-    });
-  });
-
-  return values;
-};
-
-const collectIOCCollection = (collection?: IOCCollection | null): DisplayIOC[] => {
-  if (!collection) {
-    return [];
-  }
-
-  return (Object.keys(IOC_LABELS) as IOCKey[]).flatMap(type => {
-    const values = collection[type];
-    if (!Array.isArray(values)) {
-      return [];
-    }
-
-    return values
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-      .map(value => ({
-        type,
-        label: IOC_LABELS[type],
-        value,
-      }));
-  });
-};
-
-const formatJobStatus = (status: string) =>
-  status
-    .split('_')
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-
-const formatBytes = (value?: number | null) => {
-  if (typeof value !== 'number') {
-    return 'Pending';
-  }
-
-  if (value < 1024) {
-    return `${value} B`;
-  }
-
-  if (value < 1024 * 1024) {
-    return `${(value / 1024).toFixed(1)} KB`;
-  }
-
-  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 };

@@ -8,6 +8,8 @@ interface FileListProps {
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
   onArchivePasswordChange: (id: string, archivePassword: string) => void;
+  onOpenStatus: (jobId: string) => void;
+  onOpenResult: (jobId: string) => void;
 }
 
 export const FileList: FC<FileListProps> = ({
@@ -15,6 +17,8 @@ export const FileList: FC<FileListProps> = ({
   onRemove,
   onRetry,
   onArchivePasswordChange,
+  onOpenStatus,
+  onOpenResult,
 }) => {
   if (files.length === 0) {
     return null;
@@ -33,6 +37,8 @@ export const FileList: FC<FileListProps> = ({
             onRemove={onRemove}
             onRetry={onRetry}
             onArchivePasswordChange={onArchivePasswordChange}
+            onOpenStatus={onOpenStatus}
+            onOpenResult={onOpenResult}
           />
         ))}
       </div>

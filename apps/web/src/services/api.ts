@@ -40,7 +40,15 @@ export const uploadFile = async (fileInput: FileInput): Promise<UploadResponse> 
   }
 };
 
-export const getUploadStatus = async (jobId: string): Promise<JobStatusResponse> => {
-  const response = await axios.get<JobStatusResponse>(`${API_BASE_URL}/v1/jobs/${jobId}`);
+export const getJobResult = async (jobId: string): Promise<JobStatusResponse> => {
+  const response = await axios.get<JobStatusResponse>(`${API_BASE_URL}/v1/jobs/${jobId}/result`);
   return response.data;
 };
+
+export const getUploadStatus = getJobResult;
+
+export const getJSONReportURL = (jobId: string) =>
+  `${API_BASE_URL}/v1/jobs/${jobId}/report.json`;
+
+export const getPDFReportURL = (jobId: string) =>
+  `${API_BASE_URL}/v1/jobs/${jobId}/report.pdf`;

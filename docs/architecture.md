@@ -68,6 +68,11 @@ Responsibilities:
 
 The frontend does not analyze files directly. It only communicates with the Go API.
 
+Current implementation notes:
+
+* Built with React and Vite under `apps/web`
+* Polls the API for job progress and renders analysis results
+
 ---
 
 ### 2. Go API Service

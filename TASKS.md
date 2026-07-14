@@ -1,4 +1,4 @@
-## 1. Define Project Scope and README
+## ~~1. Define Project Scope and README~~
 
 **Instruction:**
 Create the main `README.md` that clearly explains what MALCORE is.
@@ -23,7 +23,7 @@ This is your **first impression**. It defines your personal brand.
 
 ---
 
-## 2. Design System Architecture Document
+## ~~2. Design System Architecture Document~~
 
 **Instruction:**
 Create `docs/architecture.md`.
@@ -52,7 +52,7 @@ Shows **senior-level thinking** and system design skills.
 
 ---
 
-## 3. Create Monorepo Structure
+## ~~3. Create Monorepo Structure~~
 
 **Instruction:**
 Initialize repository structure.
@@ -84,7 +84,7 @@ Clean structure = easier scaling + contributors.
 
 ---
 
-## 4. Initialize Go API Service
+## ~~4. Initialize Go API Service~~
 
 **Instruction:**
 Create backend API in Go.
@@ -106,7 +106,7 @@ Foundation of entire system.
 
 ---
 
-## 5. Setup PostgreSQL and Migrations
+## ~~5. Setup PostgreSQL and Migrations~~
 
 **Instruction:**
 Connect Go API to PostgreSQL.
@@ -127,7 +127,7 @@ All data (jobs, results) depend on this.
 
 ---
 
-## 6. Create Analysis Job Table
+## ~~6. Create Analysis Job Table~~
 
 **Instruction:**
 Design and implement job system.
@@ -150,7 +150,7 @@ Everything in MALCORE is based on jobs.
 
 ---
 
-## 7. Implement File Upload Endpoint
+## ~~7. Implement File Upload Endpoint~~
 
 **Instruction:**
 Create endpoint to upload files.
@@ -175,7 +175,7 @@ Create endpoint to upload files.
 
 ---
 
-## 8. Implement URL Submission Endpoint
+## ~~8. Implement URL Submission Endpoint~~
 
 **Instruction:**
 Allow scanning via URL.
@@ -201,7 +201,7 @@ Allow scanning via URL.
 
 ---
 
-## 9. Implement File Downloader Module
+## ~~9. Implement File Downloader Module~~
 
 **Instruction:**
 Create reusable downloader logic.
@@ -222,7 +222,7 @@ Used by URL submission.
 
 ---
 
-## 10. Implement Quarantine Storage
+## ~~10. Implement Quarantine Storage~~
 
 **Instruction:**
 Store all files safely.
@@ -246,7 +246,7 @@ Store all files safely.
 
 ---
 
-## 11. Implement File Hashing
+## ~~11. Implement File Hashing~~
 
 **Instruction:**
 Generate file hashes.
@@ -265,7 +265,7 @@ Used for identification and analysis.
 
 ---
 
-## 12. Implement MIME Type Detection
+## ~~12. Implement MIME Type Detection~~
 
 **Instruction:**
 Detect real file type.
@@ -284,7 +284,7 @@ Detect real file type.
 
 ---
 
-## 13. Setup MinIO Storage
+## ~~13. Setup MinIO Storage~~
 
 **Instruction:**
 Integrate object storage.
@@ -304,7 +304,7 @@ Scalable storage system.
 
 ---
 
-## 14. Setup Redis and Queue System
+## ~~14. Setup Redis and Queue System~~
 
 **Instruction:**
 Setup async job processing.
@@ -325,7 +325,7 @@ Setup async job processing.
 
 ---
 
-## 15. Implement Worker Service
+## ~~15. Implement Worker Service~~
 
 **Instruction:**
 Create background worker.
@@ -342,7 +342,7 @@ Create background worker.
 
 ---
 
-## 16. Build Python Analyzer Framework
+## ~~16. Build Python Analyzer Framework~~
 
 **Instruction:**
 Create modular analyzer system.
@@ -368,7 +368,7 @@ analyzers/
 
 ---
 
-## 17. Implement PE File Analyzer
+## ~~17. Implement PE File Analyzer~~
 
 **Instruction:**
 Analyze `.exe` and `.dll`.
@@ -389,7 +389,7 @@ Analyze `.exe` and `.dll`.
 
 ---
 
-## 18. Implement Script Analyzer
+## ~~18. Implement Script Analyzer~~
 
 **Instruction:**
 Analyze `.ps1` and `.js`.
@@ -406,7 +406,7 @@ Analyze `.ps1` and `.js`.
 
 ---
 
-## 19. Implement Office Macro Analyzer
+## ~~19. Implement Office Macro Analyzer~~
 
 **Instruction:**
 Analyze `.docx`, `.xls`, `.ppt`.
@@ -426,7 +426,7 @@ Analyze `.docx`, `.xls`, `.ppt`.
 
 ---
 
-## 20. Implement Archive Analyzer
+## ~~20. Implement Archive Analyzer~~
 
 **Instruction:**
 Handle `.zip`, `.rar`, `.7z`.
@@ -443,7 +443,7 @@ Handle `.zip`, `.rar`, `.7z`.
 
 ---
 
-## 21. Integrate YARA Scanning
+## ~~21. Integrate YARA Scanning~~
 
 **Instruction:**
 Add signature detection.
@@ -460,7 +460,7 @@ Add signature detection.
 
 ---
 
-## 22. Implement IOC Extraction
+## ~~22. Implement IOC Extraction~~
 
 **Instruction:**
 Extract indicators of compromise.
@@ -477,7 +477,7 @@ Extract indicators of compromise.
 
 ---
 
-## 23. Implement Rule-Based Scoring
+## ~~23. Implement Rule-Based Scoring~~
 
 **Instruction:**
 Create scoring rules.
@@ -498,7 +498,7 @@ Create scoring rules.
 
 ---
 
-## 24. Implement AI Scoring
+## ~~24. Implement AI Scoring~~
 
 **Instruction:**
 Add simple ML scoring.
@@ -519,7 +519,7 @@ Add simple ML scoring.
 
 ---
 
-## 25. Implement Final Risk Calculation
+## ~~25. Implement Final Risk Calculation~~
 
 **Instruction:**
 Combine scores.
@@ -543,7 +543,7 @@ final = 0.6 * rule + 0.4 * ai
 
 ---
 
-## 26. Generate JSON Report
+## ~~26. Generate JSON Report~~
 
 **Instruction:**
 Create structured output.
@@ -561,7 +561,7 @@ Create structured output.
 
 ---
 
-## 27. Generate PDF Report
+## ~~27. Generate PDF Report~~
 
 **Instruction:**
 Create readable report.
@@ -576,7 +576,7 @@ Create readable report.
 
 ---
 
-## 28. Implement Job Result Endpoint
+## ~~28. Implement Job Result Endpoint~~
 
 **Instruction:**
 Return analysis result.
@@ -590,7 +590,7 @@ Return analysis result.
 
 ---
 
-## 29. Build Frontend Upload Page
+## ~~29. Build Frontend Upload Page~~
 
 **Instruction:**
 Create UI for upload.
@@ -607,7 +607,7 @@ Create UI for upload.
 
 ---
 
-## 30. Build Job Status Page
+## ~~30. Build Job Status Page~~
 
 **Instruction:**
 Display job progress.
@@ -618,7 +618,7 @@ Display job progress.
 
 ---
 
-## 31. Build Results Dashboard
+## ~~31. Build Results Dashboard~~
 
 **Instruction:**
 Display analysis results.

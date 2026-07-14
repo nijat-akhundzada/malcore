@@ -21,6 +21,7 @@ func New(log *slog.Logger, jobRepo *jobs.Repository, store storage.Storage, enqu
 	r.Use(middleware.Recoverer)
 
 	jobHandler := handlers.NewJobHandler(jobRepo)
+	reportHandler := handlers.NewReportHandler(jobRepo)
 	dl := downloader.NewDefaultDownloader(log)
 	uploadHandler := handlers.NewUploadHandler(log, jobRepo, store, enqueuer)
 	urlHandler := handlers.NewURLHandler(log, jobRepo, dl, store, enqueuer)
@@ -30,6 +31,9 @@ func New(log *slog.Logger, jobRepo *jobs.Repository, store storage.Storage, enqu
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/jobs", jobHandler.Create)
 		r.Get("/jobs/{id}", jobHandler.FindByID)
+		r.Get("/jobs/{id}/result", jobHandler.Result)
+		r.Get("/jobs/{id}/report.json", reportHandler.JSON)
+		r.Get("/jobs/{id}/report.pdf", reportHandler.PDF)
 
 		r.Post("/files/upload", uploadHandler.Upload)
 		r.Post("/urls/submit", urlHandler.Submit)

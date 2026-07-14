@@ -54,7 +54,7 @@ func TestPythonAnalyzerRunsCLIAndMapsFindingsToRisk(t *testing.T) {
 		t.Fatalf("analyze: %v", err)
 	}
 
-	if result.Score != 50 || result.AIScore != 10 || result.RiskLevel != jobs.RiskMedium {
+	if result.Score != 34 || result.AIScore != 10 || result.RiskLevel != jobs.RiskMedium {
 		t.Fatalf("expected medium risk result, got score=%d ai_score=%d risk=%q", result.Score, result.AIScore, result.RiskLevel)
 	}
 
@@ -69,6 +69,9 @@ func TestPythonAnalyzerRunsCLIAndMapsFindingsToRisk(t *testing.T) {
 	}
 	if scoring["rule_score"] != float64(50) || scoring["ai_score"] != float64(10) {
 		t.Fatalf("expected scoring block with rule=50 ai=10, got %#v", scoring)
+	}
+	if scoring["final_score"] != float64(34) || scoring["final_risk_level"] != "medium" {
+		t.Fatalf("expected scoring block with final score and risk, got %#v", scoring)
 	}
 	if !fetcher.cleanupCalled {
 		t.Fatalf("expected fetched input cleanup to be called")

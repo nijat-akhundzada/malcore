@@ -68,6 +68,14 @@ func (h *JobHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *JobHandler) FindByID(w http.ResponseWriter, r *http.Request) {
+	h.respondWithJob(w, r)
+}
+
+func (h *JobHandler) Result(w http.ResponseWriter, r *http.Request) {
+	h.respondWithJob(w, r)
+}
+
+func (h *JobHandler) respondWithJob(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	job, err := h.repo.FindByID(r.Context(), id)

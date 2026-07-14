@@ -61,7 +61,7 @@ export const FileUploadZone: FC<FileUploadZoneProps> = ({ onFileSelect }) => {
         </p>
         <p className="secondary-text">or click to browse</p>
       </div>
-      <p className="supported-types">Supports all file types (Max 10MB)</p>
+      <p className="supported-types">Supports binaries, scripts, archives, and Office files (Max 10MB)</p>
     </div>
   );
 };

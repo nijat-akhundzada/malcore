@@ -23,8 +23,19 @@ func TestScoreAnalyzerOutputUsesYARAHits(t *testing.T) {
 	if score != 80 {
 		t.Fatalf("expected high YARA hit to score 80, got %d", score)
 	}
-	if riskLevelForScore(score) != jobs.RiskHigh {
-		t.Fatalf("expected high risk, got %q", riskLevelForScore(score))
+	if riskLevelForScore(score) != jobs.RiskCritical {
+		t.Fatalf("expected critical risk, got %q", riskLevelForScore(score))
+	}
+}
+
+func TestFinalScoreUsesWeightedFormula(t *testing.T) {
+	score := finalScore(80, 10)
+
+	if score != 52 {
+		t.Fatalf("expected weighted final score 52, got %d", score)
+	}
+	if riskLevelForScore(score) != jobs.RiskMedium {
+		t.Fatalf("expected medium risk, got %q", riskLevelForScore(score))
 	}
 }
 
@@ -68,8 +79,8 @@ func TestScoreAnalyzerOutputUsesOfficeMacros(t *testing.T) {
 	if score != 80 {
 		t.Fatalf("expected macro with suspicious keyword to score 80, got %d", score)
 	}
-	if riskLevelForScore(score) != jobs.RiskHigh {
-		t.Fatalf("expected high risk, got %q", riskLevelForScore(score))
+	if riskLevelForScore(score) != jobs.RiskCritical {
+		t.Fatalf("expected critical risk, got %q", riskLevelForScore(score))
 	}
 }
 

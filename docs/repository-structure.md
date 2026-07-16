@@ -6,7 +6,7 @@ MALCORE uses a monorepo structure.
 
 ### apps/web
 
-Frontend application.
+Frontend application built with React and Vite.
 
 This will contain the web dashboard for:
 
@@ -28,18 +28,7 @@ Responsibilities:
 - expose job status
 - expose reports
 - communicate with database, queue, and storage
-
-### services/worker
-
-Go background worker service.
-
-Responsibilities:
-
-- consume analysis jobs from Redis
-- coordinate analysis pipeline
-- call Python analyzer
-- update job status
-- store results
+- host the worker entrypoint at `services/api/cmd/worker`
 
 ### services/analyzer
 
@@ -58,16 +47,10 @@ Responsibilities:
 
 Docker and Docker Compose configuration.
 
-### deployments/nginx
-
-Future optional NGINX configuration.
-
-This is not needed for local development but kept for future deployment examples.
-
 ### docs
 
 Project documentation.
 
-### rules/yara
+### services/analyzer/rules
 
-YARA detection rules.
+YARA detection rules loaded by the analyzer runtime.

@@ -33,7 +33,8 @@ The project is not just a file scanner. It is designed as a real analysis pipeli
 - Extract IOCs such as URLs, domains, and IP addresses
 - Run YARA rule scanning
 - Calculate rule-based risk scores
-- Generate structured JSON reports
+- Generate structured JSON and PDF reports
+- Track queued jobs through dedicated status and results views
 - Designed for future sandbox and dynamic analysis support
 
 ---
@@ -159,7 +160,7 @@ JSON / PDF Report
 | Queue            | Redis + Asynq  |
 | Storage          | MinIO          |
 | Analyzer Engine  | Python         |
-| Frontend         | Next.js        |
+| Frontend         | React + Vite   |
 | Containerization | Docker Compose |
 | Rules            | YARA           |
 
@@ -167,14 +168,14 @@ JSON / PDF Report
 
 ## Getting Started
 
-> Setup instructions will be added as the project evolves.
+The repository already contains the core services and a Vite-based frontend. Local setup is still evolving, but the intended stack is:
 
 Planned local setup:
 
 ```bash
 git clone https://github.com/nijat-akhundzada/malcore.git
 cd malcore
-docker compose up --build
+docker compose -f deployments/docker/docker-compose.yml up --build
 ```
 
 ---

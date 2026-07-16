@@ -70,23 +70,14 @@ func (h *JobHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *JobHandler) FindByID(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-
-	job, err := h.repo.FindByID(r.Context(), id)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			writeJSONError(w, http.StatusNotFound, "job not found")
-			return
-		}
-
-		writeJSONError(w, http.StatusInternalServerError, "failed to fetch job")
-		return
-	}
-
-	writeJSON(w, http.StatusOK, toJobResponse(job))
+	h.respondWithJob(w, r)
 }
 
 func (h *JobHandler) Result(w http.ResponseWriter, r *http.Request) {
+	h.respondWithJob(w, r)
+}
+
+func (h *JobHandler) respondWithJob(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	job, err := h.repo.FindByID(r.Context(), id)
@@ -97,11 +88,6 @@ func (h *JobHandler) Result(w http.ResponseWriter, r *http.Request) {
 		}
 
 		writeJSONError(w, http.StatusInternalServerError, "failed to fetch job")
-		return
-	}
-
-	if job.Status != jobs.StatusCompleted {
-		writeJSONError(w, http.StatusConflict, "result is available after analysis completes")
 		return
 	}
 

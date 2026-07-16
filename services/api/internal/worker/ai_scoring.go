@@ -63,7 +63,7 @@ func aiScoreFromFeatures(features aiScoringFeatures) int {
 	return clampScore(int(math.Round(probability * 100)))
 }
 
-func annotateAnalyzerResult(raw json.RawMessage, ruleScore int, aiResult aiScoringResult, finalScore int) json.RawMessage {
+func annotateAnalyzerResult(raw json.RawMessage, ruleScore int, aiResult aiScoringResult, weightedScore int, riskLevel string) json.RawMessage {
 	if len(raw) == 0 {
 		return raw
 	}
@@ -74,14 +74,11 @@ func annotateAnalyzerResult(raw json.RawMessage, ruleScore int, aiResult aiScori
 	}
 
 	payload["scoring"] = map[string]any{
-		"rule_score":  ruleScore,
-		"ai_score":    aiResult.Score,
-		"final_score": finalScore,
-		"formula":     "0.6 * rule_score + 0.4 * ai_score",
-		"weights": map[string]any{
-			"rule": ruleScoreWeight,
-			"ai":   aiScoreWeight,
-		},
+		"rule_score":       ruleScore,
+		"ai_score":         aiResult.Score,
+		"final_score":      weightedScore,
+		"final_risk_level": riskLevel,
+		"formula":          "0.6*rule_score + 0.4*ai_score",
 		"ai_model": map[string]any{
 			"name":     aiResult.Model,
 			"features": aiResult.Features,

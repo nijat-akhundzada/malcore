@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nijat-akhundzada/malcore/services/api/internal/jobs"
+	"github.com/nijat-akhundzada/malcore/services/api/internal/reporting"
 )
 
 type JobHandler struct {
@@ -82,6 +84,93 @@ func (h *JobHandler) FindByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, toJobResponse(job))
+}
+
+func (h *JobHandler) Result(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	job, err := h.repo.FindByID(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeJSONError(w, http.StatusNotFound, "job not found")
+			return
+		}
+
+		writeJSONError(w, http.StatusInternalServerError, "failed to fetch job")
+		return
+	}
+
+	if job.Status != jobs.StatusCompleted {
+		writeJSONError(w, http.StatusConflict, "result is available after analysis completes")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toJobResponse(job))
+}
+
+func (h *JobHandler) Report(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	job, err := h.repo.FindByID(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeJSONError(w, http.StatusNotFound, "job not found")
+			return
+		}
+
+		writeJSONError(w, http.StatusInternalServerError, "failed to fetch job")
+		return
+	}
+
+	if job.Status != jobs.StatusCompleted {
+		writeJSONError(w, http.StatusConflict, "report is available after analysis completes")
+		return
+	}
+
+	report, err := reporting.Build(job, time.Now())
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "failed to build report")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, report)
+}
+
+func (h *JobHandler) PDFReport(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	job, err := h.repo.FindByID(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeJSONError(w, http.StatusNotFound, "job not found")
+			return
+		}
+
+		writeJSONError(w, http.StatusInternalServerError, "failed to fetch job")
+		return
+	}
+
+	if job.Status != jobs.StatusCompleted {
+		writeJSONError(w, http.StatusConflict, "report is available after analysis completes")
+		return
+	}
+
+	report, err := reporting.Build(job, time.Now())
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "failed to build report")
+		return
+	}
+
+	pdf, err := reporting.RenderPDF(r.Context(), report)
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "failed to render PDF report")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", `attachment; filename="malcore-report-`+job.ID+`.pdf"`)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(pdf)
 }
 
 func toJobResponse(job *jobs.AnalysisJob) JobResponse {

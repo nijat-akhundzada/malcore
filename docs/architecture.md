@@ -347,9 +347,11 @@ The analyzer must:
 
 ### Sandbox Boundary
 
-Dynamic execution is not part of the first implementation.
+Dynamic execution must run outside the API boundary.
 
-When added later, it must run in an isolated environment such as:
+MALCORE includes a first-pass Docker isolation runner for controlled sandbox experiments. It is intentionally separate from the normal request path and should run on a dedicated sandbox host or service, not inside the API container.
+
+Supported isolation direction:
 
 * Firejail
 * restricted Docker container

@@ -9,6 +9,11 @@ import (
 
 const maxScore = 100
 
+const (
+	ruleScoreWeight = 0.6
+	aiScoreWeight   = 0.4
+)
+
 func scoreAnalyzerOutput(output *analyzerOutput) int {
 	if output == nil {
 		return 0
@@ -218,6 +223,11 @@ func riskLevelForScore(score int) jobs.RiskLevel {
 	default:
 		return jobs.RiskLow
 	}
+}
+
+func combineScores(ruleScore int, aiScore int) int {
+	combined := ruleScoreWeight*float64(clampScore(ruleScore)) + aiScoreWeight*float64(clampScore(aiScore))
+	return clampScore(int(math.Round(combined)))
 }
 
 func floatValue(value any) (float64, bool) {

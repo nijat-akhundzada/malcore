@@ -16,6 +16,26 @@
   color: #fff;
 }
 
+.job-counts {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.job-counts span {
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+}
+
 .file-list {
   display: flex;
   flex-direction: column;
@@ -40,4 +60,15 @@
 
 .file-list::-webkit-scrollbar-thumb:hover {
   background: #7b82ff;
+}
+
+@media (max-width: 640px) {
+  .file-list-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .job-counts {
+    justify-content: flex-start;
+  }
 }

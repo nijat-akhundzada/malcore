@@ -7,6 +7,8 @@ interface FileListItemProps {
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
   onArchivePasswordChange: (id: string, archivePassword: string) => void;
+  onDownloadReport: (jobId: string) => void;
+  onDownloadPDFReport: (jobId: string) => void;
 }
 
 export const FileListItem: FC<FileListItemProps> = ({
@@ -14,6 +16,8 @@ export const FileListItem: FC<FileListItemProps> = ({
   onRemove,
   onRetry,
   onArchivePasswordChange,
+  onDownloadReport,
+  onDownloadPDFReport,
 }) => {
   const getStatusIcon = () => {
     switch (file.status) {
@@ -56,7 +60,11 @@ export const FileListItem: FC<FileListItemProps> = ({
   const riskLevel = file.job?.risk_level?.toLowerCase() || 'pending';
   const passwordLocked = ['uploading', 'analyzing', 'completed'].includes(file.status);
   const findings = collectFindings(file);
-  const iocs = collectIOCs(file);
+  const iocGroups = collectIOCGroups(file);
+  const yaraHits = collectYARAHits(file);
+  const scoreDisplay = getScoreDisplay(file);
+  const iocTotal = countIOCs(iocGroups);
+  const progressSteps = getProgressSteps(file);
 
   return (
     <div className={`file-list-item ${file.status}`}>
@@ -93,6 +101,25 @@ export const FileListItem: FC<FileListItemProps> = ({
           </button>
         )}
 
+        {file.status === 'completed' && file.jobId && (
+          <>
+            <button
+              onClick={() => onDownloadReport(file.jobId as string)}
+              className="report-btn"
+              title="Download JSON report"
+            >
+              JSON
+            </button>
+            <button
+              onClick={() => onDownloadPDFReport(file.jobId as string)}
+              className="report-btn"
+              title="Download PDF report"
+            >
+              PDF
+            </button>
+          </>
+        )}
+
         <span className="status-icon">{getStatusIcon()}</span>
       </div>
 
@@ -118,21 +145,105 @@ export const FileListItem: FC<FileListItemProps> = ({
         <div className="job-id">Job ID: {file.jobId}</div>
       )}
 
+      {(file.jobId || file.status !== 'pending') && (
+        <div className="job-progress" aria-label="Job progress">
+          {progressSteps.map(step => (
+            <div className={`progress-step ${step.state}`} key={step.key}>
+              <span className="progress-dot" aria-hidden="true" />
+              <span>{step.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {file.jobId && (
         <div className="analysis-details">
-          <div className="analysis-summary">
-            <span className={`risk-badge ${riskLevel}`}>
-              {file.job?.risk_level ? file.job.risk_level : 'pending'}
-            </span>
-            <span className="score-value">
-              Score {file.job?.score ?? 'pending'}
-              {typeof file.job?.score === 'number' ? '/100' : ''}
-            </span>
-            <span className="ai-score-value">
-              AI {file.job?.ai_score ?? 'pending'}
-              {typeof file.job?.ai_score === 'number' ? '/100' : ''}
-            </span>
-            <span className="job-status">{file.job ? formatJobStatus(file.job.status) : 'Waiting'}</span>
+          <div className="results-dashboard">
+            <div className="dashboard-overview">
+              <div className="score-panel">
+                <span className="dashboard-label">Final Score</span>
+                <div className="score-readout">
+                  <strong>{scoreDisplay.final ?? 'Pending'}</strong>
+                  {typeof scoreDisplay.final === 'number' && <span>/100</span>}
+                </div>
+                <div className="score-meter" aria-label="Final score">
+                  <span style={{ width: `${scoreDisplay.percent}%` }} />
+                </div>
+                <div className="score-breakdown">
+                  <span>Rule {formatScore(scoreDisplay.rule)}</span>
+                  <span>AI {formatScore(scoreDisplay.ai)}</span>
+                </div>
+              </div>
+
+              <div className={`risk-panel ${riskLevel}`}>
+                <span className="dashboard-label">Risk</span>
+                <strong>{file.job?.risk_level ? file.job.risk_level : 'Pending'}</strong>
+                <span>{file.job ? formatJobStatus(file.job.status) : 'Waiting'}</span>
+              </div>
+            </div>
+
+            <div className="dashboard-metrics">
+              <div className="dashboard-metric">
+                <span>YARA</span>
+                <strong>{yaraHits.length}</strong>
+              </div>
+              <div className="dashboard-metric">
+                <span>IOCs</span>
+                <strong>{iocTotal}</strong>
+              </div>
+              <div className="dashboard-metric">
+                <span>Findings</span>
+                <strong>{findings.length}</strong>
+              </div>
+            </div>
+
+            <div className="dashboard-sections">
+              <section className="dashboard-section">
+                <div className="dashboard-section-title">YARA Hits</div>
+                {yaraHits.length > 0 ? (
+                  <div className="yara-hit-list">
+                    {yaraHits.slice(0, 6).map((hit, index) => (
+                      <div className="yara-hit" key={`${hit.rule}-${index}`}>
+                        <div className="yara-hit-heading">
+                          <span className={`finding-severity ${hit.severity.toLowerCase()}`}>
+                            {hit.severity}
+                          </span>
+                          <strong>{hit.rule}</strong>
+                        </div>
+                        {hit.description && (
+                          <div className="yara-hit-description">{hit.description}</div>
+                        )}
+                        {hit.tags.length > 0 && (
+                          <div className="yara-tags">
+                            {hit.tags.slice(0, 5).map(tag => (
+                              <span key={`${hit.rule}-${tag}`}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {yaraHits.length > 6 && (
+                      <div className="dashboard-more">{yaraHits.length - 6} more YARA hits</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="dashboard-empty">No YARA hits</div>
+                )}
+              </section>
+
+              <section className="dashboard-section">
+                <div className="dashboard-section-title">IOCs</div>
+                {iocTotal > 0 ? (
+                  <div className="ioc-groups">
+                    {renderIOCGroup('URLs', iocGroups.urls)}
+                    {renderIOCGroup('IPs', iocGroups.ips)}
+                    {renderIOCGroup('Domains', iocGroups.domains)}
+                  </div>
+                ) : (
+                  <div className="dashboard-empty">No IOCs found</div>
+                )}
+              </section>
+            </div>
           </div>
 
           <div className="analysis-grid">
@@ -153,23 +264,6 @@ export const FileListItem: FC<FileListItemProps> = ({
               <code>{file.job?.sha256_hash || 'Pending'}</code>
             </div>
           </div>
-
-          {iocs.length > 0 && (
-            <div className="iocs-panel">
-              <div className="iocs-title">Indicators ({iocs.length})</div>
-              <div className="iocs-list">
-                {iocs.slice(0, 12).map((ioc, index) => (
-                  <div className="ioc-item" key={`${ioc.type}-${ioc.value}-${index}`}>
-                    <span className={`ioc-type ${ioc.type}`}>{ioc.label}</span>
-                    <code>{ioc.value}</code>
-                  </div>
-                ))}
-              </div>
-              {iocs.length > 12 && (
-                <div className="iocs-more">{iocs.length - 12} more indicators</div>
-              )}
-            </div>
-          )}
 
           {findings.length > 0 && (
             <div className="findings-panel">
@@ -203,75 +297,225 @@ interface DisplayFinding extends AnalyzerFinding {
   analyzer: string;
 }
 
-type IOCKey = 'urls' | 'ips' | 'domains';
-
-interface DisplayIOC {
-  type: IOCKey;
-  label: string;
-  value: string;
+interface DisplayIOCGroups {
+  urls: string[];
+  ips: string[];
+  domains: string[];
 }
 
-const IOC_LABELS: Record<IOCKey, string> = {
-  urls: 'URL',
-  ips: 'IP',
-  domains: 'DOMAIN',
+interface DisplayYARAHit {
+  rule: string;
+  severity: string;
+  description: string;
+  tags: string[];
+}
+
+interface ScoreDisplay {
+  final: number | null;
+  rule: number | null;
+  ai: number | null;
+  percent: number;
+}
+
+type ProgressState = 'done' | 'active' | 'pending' | 'error';
+
+interface ProgressStep {
+  key: string;
+  label: string;
+  state: ProgressState;
+}
+
+const renderIOCGroup = (label: string, values: string[]) => {
+  if (values.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="ioc-group" key={label}>
+      <span>{label}</span>
+      <div className="ioc-chip-list">
+        {values.slice(0, 6).map(value => (
+          <code key={`${label}-${value}`}>{value}</code>
+        ))}
+      </div>
+      {values.length > 6 && (
+        <div className="dashboard-more">{values.length - 6} more</div>
+      )}
+    </div>
+  );
+};
+
+const getProgressSteps = (file: FileInput): ProgressStep[] => {
+  const jobStatus = file.job?.status;
+  const hasJob = Boolean(file.jobId || file.job);
+  const isUploading = file.status === 'uploading';
+  const isQueued = hasJob && (!jobStatus || jobStatus === 'pending' || jobStatus === 'queued');
+  const isRunning = file.status === 'analyzing' && jobStatus === 'running';
+  const isComplete = file.status === 'completed' || jobStatus === 'completed';
+  const isFailed = file.status === 'error' || jobStatus === 'failed';
+  const needsPassword = jobStatus === 'needs_password';
+
+  if (isFailed) {
+    if (!hasJob) {
+      return [
+        { key: 'upload', label: 'Uploaded', state: 'error' },
+        { key: 'queued', label: 'Queued', state: 'pending' },
+        { key: 'analysis', label: 'Analysis', state: 'pending' },
+        { key: 'result', label: 'Result', state: 'pending' },
+      ];
+    }
+
+    return [
+      { key: 'upload', label: 'Uploaded', state: hasJob ? 'done' : 'error' },
+      { key: 'queued', label: 'Queued', state: hasJob ? 'done' : 'pending' },
+      { key: 'analysis', label: 'Analysis', state: 'error' },
+      { key: 'result', label: 'Result', state: 'pending' },
+    ];
+  }
+
+  return [
+    {
+      key: 'upload',
+      label: 'Uploaded',
+      state: hasJob || isQueued || isRunning || isComplete ? 'done' : isUploading ? 'active' : 'pending',
+    },
+    {
+      key: 'queued',
+      label: needsPassword ? 'Password' : 'Queued',
+      state: isComplete || isRunning ? 'done' : needsPassword || isQueued ? 'active' : 'pending',
+    },
+    {
+      key: 'analysis',
+      label: 'Analysis',
+      state: isComplete ? 'done' : isRunning ? 'active' : 'pending',
+    },
+    {
+      key: 'result',
+      label: 'Result',
+      state: isComplete ? 'done' : 'pending',
+    },
+  ];
 };
 
 const collectFindings = (file: FileInput): DisplayFinding[] => {
   const modules = file.job?.analysis_result?.results || [];
 
   return modules.flatMap(module =>
-    (module.findings || []).map(finding => ({
-      ...finding,
-      analyzer: module.analyzer,
-    }))
+    (module.findings || [])
+      .filter(finding => normalizeToken(finding.type) !== 'yara_match')
+      .map(finding => ({
+        ...finding,
+        analyzer: module.analyzer,
+      }))
   );
 };
 
-const collectIOCs = (file: FileInput): DisplayIOC[] => {
-  const topLevel = collectIOCCollection(file.job?.analysis_result?.iocs);
-  if (topLevel.length > 0) {
+const collectYARAHits = (file: FileInput): DisplayYARAHit[] => {
+  const modules = file.job?.analysis_result?.results || [];
+  const hits: DisplayYARAHit[] = [];
+
+  modules
+    .filter(module => normalizeToken(module.analyzer) === 'yara')
+    .forEach(module => {
+      const matches = module.metadata?.matches;
+
+      if (Array.isArray(matches) && matches.length > 0) {
+        matches.forEach(match => {
+          if (!isRecord(match)) {
+            return;
+          }
+
+          const rule = stringValue(match.rule);
+          if (!rule) {
+            return;
+          }
+
+          hits.push({
+            rule,
+            severity: stringValue(match.severity) || 'info',
+            description: stringValue(match.description),
+            tags: stringArray(match.tags),
+          });
+        });
+        return;
+      }
+
+      (module.findings || [])
+        .filter(finding => normalizeToken(finding.type) === 'yara_match')
+        .forEach(finding => {
+          const rule = stringValue(finding.rule) || finding.description || 'YARA match';
+
+          hits.push({
+            rule,
+            severity: finding.severity || 'info',
+            description: finding.description || '',
+            tags: stringArray(finding.tags),
+          });
+        });
+    });
+
+  return uniqueYARAHits(hits);
+};
+
+const collectIOCGroups = (file: FileInput): DisplayIOCGroups => {
+  const topLevel = normalizeIOCCollection(file.job?.analysis_result?.iocs);
+  if (countIOCs(topLevel) > 0) {
     return topLevel;
   }
 
   const modules = file.job?.analysis_result?.results || [];
-  const seen = new Set<string>();
-  const values: DisplayIOC[] = [];
+  const groups: DisplayIOCGroups = {
+    urls: [],
+    ips: [],
+    domains: [],
+  };
 
   modules.forEach(module => {
-    collectIOCCollection(module.iocs).forEach(ioc => {
-      const key = `${ioc.type}:${ioc.value}`;
-      if (seen.has(key)) {
-        return;
-      }
-
-      seen.add(key);
-      values.push(ioc);
-    });
+    const moduleGroups = normalizeIOCCollection(module.iocs);
+    groups.urls.push(...moduleGroups.urls);
+    groups.ips.push(...moduleGroups.ips);
+    groups.domains.push(...moduleGroups.domains);
   });
 
-  return values;
+  return normalizeIOCGroups(groups);
 };
 
-const collectIOCCollection = (collection?: IOCCollection | null): DisplayIOC[] => {
+const normalizeIOCCollection = (collection?: IOCCollection | null): DisplayIOCGroups => {
   if (!collection) {
-    return [];
+    return {
+      urls: [],
+      ips: [],
+      domains: [],
+    };
   }
 
-  return (Object.keys(IOC_LABELS) as IOCKey[]).flatMap(type => {
-    const values = collection[type];
-    if (!Array.isArray(values)) {
-      return [];
-    }
-
-    return values
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-      .map(value => ({
-        type,
-        label: IOC_LABELS[type],
-        value,
-      }));
+  return normalizeIOCGroups({
+    urls: stringArray(collection.urls),
+    ips: stringArray(collection.ips),
+    domains: stringArray(collection.domains),
   });
+};
+
+const normalizeIOCGroups = (groups: DisplayIOCGroups): DisplayIOCGroups => ({
+  urls: uniqueStrings(groups.urls),
+  ips: uniqueStrings(groups.ips),
+  domains: uniqueStrings(groups.domains),
+});
+
+const countIOCs = (groups: DisplayIOCGroups) =>
+  groups.urls.length + groups.ips.length + groups.domains.length;
+
+const getScoreDisplay = (file: FileInput): ScoreDisplay => {
+  const final = numericScore(file.job?.score ?? file.job?.analysis_result?.scoring?.final_score);
+  const rule = numericScore(file.job?.analysis_result?.scoring?.rule_score);
+  const ai = numericScore(file.job?.ai_score ?? file.job?.analysis_result?.scoring?.ai_score);
+
+  return {
+    final,
+    rule,
+    ai,
+    percent: final === null ? 0 : clampScore(final),
+  };
 };
 
 const formatJobStatus = (status: string) =>
@@ -295,3 +539,67 @@ const formatBytes = (value?: number | null) => {
 
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 };
+
+const formatScore = (value: number | null) =>
+  typeof value === 'number' ? `${value}/100` : 'Pending';
+
+const numericScore = (value: unknown): number | null => {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return null;
+  }
+
+  return Math.round(value);
+};
+
+const clampScore = (value: number) => Math.max(0, Math.min(100, value));
+
+const uniqueYARAHits = (hits: DisplayYARAHit[]) => {
+  const seen = new Set<string>();
+  const unique: DisplayYARAHit[] = [];
+
+  hits.forEach(hit => {
+    const key = `${hit.rule}:${hit.description}`;
+    if (seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    unique.push(hit);
+  });
+
+  return unique;
+};
+
+const uniqueStrings = (values: string[]) => {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+
+  values.forEach(value => {
+    const trimmed = value.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      return;
+    }
+
+    seen.add(trimmed);
+    unique.push(trimmed);
+  });
+
+  return unique;
+};
+
+const stringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
+};
+
+const stringValue = (value: unknown) =>
+  typeof value === 'string' ? value : '';
+
+const normalizeToken = (value: unknown) =>
+  typeof value === 'string' ? value.toLowerCase().replace(/[\s-]+/g, '_') : '';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);

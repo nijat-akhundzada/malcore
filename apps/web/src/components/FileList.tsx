@@ -8,6 +8,8 @@ interface FileListProps {
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
   onArchivePasswordChange: (id: string, archivePassword: string) => void;
+  onDownloadReport: (jobId: string) => void;
+  onDownloadPDFReport: (jobId: string) => void;
 }
 
 export const FileList: FC<FileListProps> = ({
@@ -15,15 +17,28 @@ export const FileList: FC<FileListProps> = ({
   onRemove,
   onRetry,
   onArchivePasswordChange,
+  onDownloadReport,
+  onDownloadPDFReport,
 }) => {
   if (files.length === 0) {
     return null;
   }
 
+  const pendingCount = files.filter(file => file.status === 'pending').length;
+  const activeCount = files.filter(file => ['uploading', 'uploaded', 'analyzing'].includes(file.status)).length;
+  const completedCount = files.filter(file => file.status === 'completed').length;
+  const errorCount = files.filter(file => file.status === 'error').length;
+
   return (
     <div className="file-list-container">
       <div className="file-list-header">
-        <h3>Files ({files.length})</h3>
+        <h3>Jobs ({files.length})</h3>
+        <div className="job-counts" aria-label="Job status summary">
+          <span>Ready {pendingCount}</span>
+          <span>Active {activeCount}</span>
+          <span>Done {completedCount}</span>
+          <span>Failed {errorCount}</span>
+        </div>
       </div>
       <div className="file-list">
         {files.map(file => (
@@ -33,6 +48,8 @@ export const FileList: FC<FileListProps> = ({
             onRemove={onRemove}
             onRetry={onRetry}
             onArchivePasswordChange={onArchivePasswordChange}
+            onDownloadReport={onDownloadReport}
+            onDownloadPDFReport={onDownloadPDFReport}
           />
         ))}
       </div>

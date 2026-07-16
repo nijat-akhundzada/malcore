@@ -141,13 +141,14 @@ func (a *PythonAnalyzer) runCLI(ctx context.Context, filePath string, archivePas
 }
 
 func resultFromAnalyzerOutput(output *analyzerOutput) *AnalysisResult {
-	score := scoreAnalyzerOutput(output)
+	ruleScore := scoreAnalyzerOutput(output)
 	aiResult := scoreAIAnalyzerOutput(output)
+	finalScore := combineScores(ruleScore, aiResult.Score)
 
 	return &AnalysisResult{
-		Score:          score,
+		Score:          finalScore,
 		AIScore:        aiResult.Score,
-		RiskLevel:      riskLevelForScore(score),
-		AnalyzerResult: annotateAnalyzerResult(output.Raw, score, aiResult),
+		RiskLevel:      riskLevelForScore(finalScore),
+		AnalyzerResult: annotateAnalyzerResult(output.Raw, ruleScore, aiResult, finalScore),
 	}
 }

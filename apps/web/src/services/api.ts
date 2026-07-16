@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { FileInput, JobStatusResponse, UploadResponse } from '../types';
+import { AnalysisReport, FileInput, JobStatusResponse, UploadResponse } from '../types';
 
 const API_BASE_URL = '/api';
 
@@ -42,5 +42,22 @@ export const uploadFile = async (fileInput: FileInput): Promise<UploadResponse> 
 
 export const getUploadStatus = async (jobId: string): Promise<JobStatusResponse> => {
   const response = await axios.get<JobStatusResponse>(`${API_BASE_URL}/v1/jobs/${jobId}`);
+  return response.data;
+};
+
+export const getJobResult = async (jobId: string): Promise<JobStatusResponse> => {
+  const response = await axios.get<JobStatusResponse>(`${API_BASE_URL}/v1/jobs/${jobId}/result`);
+  return response.data;
+};
+
+export const getJobReport = async (jobId: string): Promise<AnalysisReport> => {
+  const response = await axios.get<AnalysisReport>(`${API_BASE_URL}/v1/jobs/${jobId}/report`);
+  return response.data;
+};
+
+export const getJobReportPDF = async (jobId: string): Promise<Blob> => {
+  const response = await axios.get<Blob>(`${API_BASE_URL}/v1/jobs/${jobId}/report.pdf`, {
+    responseType: 'blob',
+  });
   return response.data;
 };

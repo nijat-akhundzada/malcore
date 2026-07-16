@@ -4,7 +4,7 @@ import { UrlInputForm } from './components/UrlInputForm';
 import { FileList } from './components/FileList';
 import { UploadButton } from './components/UploadButton';
 import { useFileUploader } from './hooks/useFileUploader';
-import { getUploadStatus, uploadFile } from './services/api';
+import { getJobReport, getJobReportPDF, getJobResult, getUploadStatus, uploadFile } from './services/api';
 import { FileInput } from './types';
 import './App.css';
 
@@ -59,6 +59,8 @@ function App() {
         updateFileJob(fileId, job);
 
         if (job.status === 'completed') {
+          const result = await getJobResult(jobId);
+          updateFileJob(fileId, result);
           updateFileStatus(fileId, 'completed', undefined, jobId);
           return;
         }
@@ -111,6 +113,35 @@ function App() {
     await uploadSingleFile({ ...file, status: 'pending', error: undefined });
   };
 
+  const handleDownloadReport = async (jobId: string) => {
+    const report = await getJobReport(jobId);
+    const blob = new Blob([JSON.stringify(report, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `malcore-report-${jobId}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPDFReport = async (jobId: string) => {
+    const report = await getJobReportPDF(jobId);
+    const url = URL.createObjectURL(report);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `malcore-report-${jobId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="app">
       <div className="container">
@@ -129,6 +160,8 @@ function App() {
             onRemove={removeFile}
             onRetry={handleRetry}
             onArchivePasswordChange={updateArchivePassword}
+            onDownloadReport={handleDownloadReport}
+            onDownloadPDFReport={handleDownloadPDFReport}
           />
 
           {files.length > 0 && (

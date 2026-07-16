@@ -136,6 +136,23 @@
   transform: rotate(30deg);
 }
 
+.report-btn {
+  min-width: 48px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(20, 184, 166, 0.18);
+  color: #99f6e4;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-btn:hover {
+  background: rgba(20, 184, 166, 0.32);
+}
+
 .status-icon {
   display: inline-flex;
   align-items: center;
@@ -202,10 +219,320 @@
   overflow-wrap: anywhere;
 }
 
+.job-progress {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.progress-step {
+  min-width: 0;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 9px;
+}
+
+.progress-step span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progress-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #64748b;
+}
+
+.progress-step.done {
+  background: rgba(20, 184, 166, 0.12);
+  border-color: rgba(20, 184, 166, 0.28);
+  color: #99f6e4;
+}
+
+.progress-step.done .progress-dot {
+  background: #14b8a6;
+}
+
+.progress-step.active {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fcd34d;
+}
+
+.progress-step.active .progress-dot {
+  background: #f59e0b;
+}
+
+.progress-step.error {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.32);
+  color: #fca5a5;
+}
+
+.progress-step.error .progress-dot {
+  background: #ef4444;
+}
+
 .analysis-details {
   width: 100%;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.results-dashboard {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.dashboard-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.score-panel,
+.risk-panel {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.14);
+  padding: 12px;
+}
+
+.dashboard-label,
+.dashboard-section-title,
+.dashboard-metric span,
+.ioc-group > span {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.score-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 8px;
+  color: #f8fafc;
+}
+
+.score-readout strong {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.score-readout span {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.score-meter {
+  height: 8px;
+  margin: 10px 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.score-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #14b8a6, #f59e0b, #ef4444);
+}
+
+.score-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.score-breakdown span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d4d4d8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+}
+
+.risk-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.risk-panel strong {
+  color: #f8fafc;
+  font-size: 26px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.risk-panel > span:last-child {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.risk-panel.low {
+  border-color: rgba(34, 197, 94, 0.32);
+}
+
+.risk-panel.low strong {
+  color: #86efac;
+}
+
+.risk-panel.medium {
+  border-color: rgba(245, 158, 11, 0.34);
+}
+
+.risk-panel.medium strong {
+  color: #fcd34d;
+}
+
+.risk-panel.high {
+  border-color: rgba(239, 68, 68, 0.36);
+}
+
+.risk-panel.high strong {
+  color: #fca5a5;
+}
+
+.risk-panel.critical {
+  border-color: rgba(190, 18, 60, 0.42);
+}
+
+.risk-panel.critical strong {
+  color: #fecdd3;
+}
+
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-metric {
+  min-width: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 9px;
+}
+
+.dashboard-metric strong {
+  display: block;
+  margin-top: 4px;
+  color: #f8fafc;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dashboard-section {
+  min-width: 0;
+}
+
+.dashboard-section-title {
+  margin-bottom: 8px;
+}
+
+.yara-hit-list,
+.ioc-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.yara-hit {
+  min-width: 0;
+  border-left: 3px solid rgba(20, 184, 166, 0.5);
+  padding-left: 10px;
+}
+
+.yara-hit-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.yara-hit-heading strong {
+  min-width: 0;
+  color: #f8fafc;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.yara-hit-description,
+.dashboard-empty,
+.dashboard-more {
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.yara-hit-description {
+  margin-top: 5px;
+}
+
+.dashboard-empty,
+.dashboard-more {
+  color: #94a3b8;
+}
+
+.yara-tags,
+.ioc-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.yara-tags span,
+.ioc-chip-list code {
+  min-width: 0;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d4d4d8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 6px;
+  overflow-wrap: anywhere;
+}
+
+.ioc-group {
+  min-width: 0;
+}
+
+.ioc-chip-list code {
+  max-width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
 }
 
 .analysis-summary {
@@ -451,8 +778,17 @@
     grid-template-columns: 1fr;
   }
 
+  .dashboard-overview,
+  .dashboard-sections {
+    grid-template-columns: 1fr;
+  }
+
   .archive-password-field {
     grid-template-columns: 1fr;
+  }
+
+  .job-progress {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ioc-item {

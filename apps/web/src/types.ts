@@ -45,6 +45,17 @@ export interface AnalyzerResult {
   schema_version?: string;
   analyzers?: string[];
   iocs?: IOCCollection;
+  scoring?: {
+    rule_score?: number | null;
+    ai_score?: number | null;
+    final_score?: number | null;
+    formula?: string;
+    weights?: {
+      rule?: number;
+      ai?: number;
+    };
+    ai_model?: Record<string, unknown>;
+  };
   results?: AnalyzerModuleResult[];
 }
 
@@ -68,4 +79,27 @@ export interface JobStatusResponse {
   error_message?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface AnalysisReport {
+  schema_version: string;
+  generated_at: string;
+  job: {
+    id: string;
+    source_type: string;
+    status: string;
+  };
+  hashes: {
+    md5?: string | null;
+    sha256?: string | null;
+  };
+  yara_hits: unknown[];
+  iocs: IOCCollection;
+  scores: {
+    final?: number | null;
+    rule?: number | null;
+    ai?: number | null;
+    risk_level?: string | null;
+  };
+  [key: string]: unknown;
 }

@@ -184,3 +184,25 @@ func TestScoreAIAnalyzerOutputReturnsBaselineScoreForNoFeatures(t *testing.T) {
 		t.Fatalf("expected empty features, got %#v", result.Features)
 	}
 }
+
+func TestCombineScoresWeightsRuleAndAI(t *testing.T) {
+	score := combineScores(80, 30)
+
+	if score != 60 {
+		t.Fatalf("expected 0.6*80 + 0.4*30 to score 60, got %d", score)
+	}
+	if riskLevelForScore(score) != jobs.RiskMedium {
+		t.Fatalf("expected medium risk for final score 60, got %q", riskLevelForScore(score))
+	}
+}
+
+func TestCombineScoresClampsInputsAndOutput(t *testing.T) {
+	score := combineScores(120, 100)
+
+	if score != 100 {
+		t.Fatalf("expected combined score to clamp at 100, got %d", score)
+	}
+	if riskLevelForScore(score) != jobs.RiskCritical {
+		t.Fatalf("expected critical risk for score 100, got %q", riskLevelForScore(score))
+	}
+}

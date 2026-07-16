@@ -30,6 +30,9 @@ func New(log *slog.Logger, jobRepo *jobs.Repository, store storage.Storage, enqu
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/jobs", jobHandler.Create)
 		r.Get("/jobs/{id}", jobHandler.FindByID)
+		r.Get("/jobs/{id}/result", jobHandler.Result)
+		r.Get("/jobs/{id}/report", jobHandler.Report)
+		r.Get("/jobs/{id}/report.pdf", jobHandler.PDFReport)
 
 		r.Post("/files/upload", uploadHandler.Upload)
 		r.Post("/urls/submit", urlHandler.Submit)

@@ -203,6 +203,7 @@ MALCORE is intended for educational and defensive security research purposes onl
 
 CI/CD smoke-test verification is enabled for this repository.
 Automated checks run on each update to the main branch.
+This line provides an additional pipeline trigger.
 
 Do not upload or execute live malware on an unsafe machine. Dynamic execution must only be performed inside properly isolated environments.
 

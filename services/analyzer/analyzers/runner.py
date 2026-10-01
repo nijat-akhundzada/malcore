@@ -13,6 +13,7 @@ from .scripts.analyzer import ScriptAnalyzer
 from .yara.analyzer import YARAAnalyzer
 
 
+# Registration order determines the result order when all analyzers are selected.
 ANALYZERS: List[Analyzer] = [
     PEAnalyzer(),
     ScriptAnalyzer(),
